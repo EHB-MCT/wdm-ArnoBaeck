@@ -1,16 +1,13 @@
-## Start vanaf een bepaalde base image
 FROM node:latest
-
-## 
 WORKDIR /usr/app
 
-## 
-COPY package*.json .
-
-## Installeer dependencies
+COPY package*.json ./
 RUN npm install --quiet
 
-COPY ./ ./
+COPY public/ ./public/
+COPY src/ ./src/
+COPY index.html .
+COPY vite.config.js .
 
-## 
-CMD ["npm", "start"]
+EXPOSE 8080
+CMD ["npm", "run", "dev"]
