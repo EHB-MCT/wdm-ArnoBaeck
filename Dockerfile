@@ -18,5 +18,9 @@ COPY vite.config.js .
 
 ## Stel de poort in waarop de app zal draaien, deze poort moet opentesteld worden anders werkt het niet
 EXPOSE 8080
-## Start de app
+## Start de app (altijd de laatste stap in een dockerfile)
 CMD ["npm", "run", "dev"]
+
+## --- Commands to build and run the docker image ---
+    # docker build -t local/test .
+    # docker run --rm -it -p 8080:8080 local/test
