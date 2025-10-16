@@ -2,8 +2,8 @@
 
 ## Start met de laatste versie van node
 FROM node:latest
-### Stel de werkdirectory in de container in op /usr/app
-WORKDIR /usr/app
+### Stel de werkdirectory in de container in op /app
+WORKDIR /app
 
 ## Kopieer package.json en alles wat begint met package en eindigt op .json naar de werkdirectory
 COPY package*.json ./
@@ -11,15 +11,12 @@ COPY package*.json ./
 RUN npm install --quiet
 
 ## Kopieer de rest van de code naar de werkdirectory
-COPY public/ ./public/
-COPY src/ ./src/
-COPY index.html .
-COPY vite.config.js .
+COPY . .
 
 ## Stel de poort in waarop de app zal draaien, deze poort moet opentesteld worden anders werkt het niet
 EXPOSE 8080
 ## Start de app (altijd de laatste stap in een dockerfile)
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "run"]
 
 ## --- Commands to build and run the docker image ---
     # docker build -t local/test .
