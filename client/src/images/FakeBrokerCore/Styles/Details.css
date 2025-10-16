@@ -1,0 +1,122 @@
+:root {
+  --bg: #0f1115;
+  --panel: #1a1f27;
+  --panel-2: #151922;
+  --text: #e7ecf3;
+  --muted: #9aa4b2;
+  --ok: #2bba66;
+  --err: #e24a4a;
+  --buy: #1a8f2a;
+  --sell: #b31b1b;
+  --neutral: #3a3f47;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, Arial, Helvetica, sans-serif;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page__header {
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.controls {
+  background: var(--panel);
+  border: 1px solid #222831;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.controls__row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.info {
+  margin: 8px 4px 0;
+  color: var(--muted);
+}
+
+.result {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.alert {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  border: 1px solid #283041;
+  font-size: 14px;
+}
+.alert--ok { color: var(--text); }
+.alert--error { border-color: rgba(226,74,74,0.35); color: var(--text); }
+
+.card {
+  background: var(--panel);
+  border: 1px solid #222831;
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.card__title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.code {
+  margin: 0;
+  padding: 12px;
+  background: var(--panel-2);
+  border: 1px solid #283041;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #ccd6e4;
+  overflow: auto;
+}
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: transform .06s ease, opacity .12s ease, filter .12s ease;
+  background: var(--neutral);
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn--buy    { background: var(--buy); }
+.btn--sell   { background: var(--sell); }
+.btn--neutral{ background: var(--neutral); }
+
+.btn:hover { filter: brightness(1.03); }
