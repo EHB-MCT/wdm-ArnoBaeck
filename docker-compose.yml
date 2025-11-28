@@ -24,12 +24,14 @@ services:
       - /app/node_modules
     environment:
       - OLLAMA_URL=http://ollama:11434
+      - MONGODB_URL=mongodb://mongodb:27017/brokerdb
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - PORT=3000
     command: npm run run
     depends_on:
       - ollama
+      - mongodb
 
   ollama:
     image: ollama/ollama:latest
@@ -41,5 +43,17 @@ services:
     tty: true
     restart: unless-stopped
 
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=brokerdb
+
 volumes:
   ollama_data:
+  mongodb_data:
