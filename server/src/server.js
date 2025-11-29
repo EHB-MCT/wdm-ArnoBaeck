@@ -153,19 +153,20 @@ app.get("/api/auth/profile", authenticateToken, async (req, res) => {
 
 app.get("/", (_request, response) => response.status(200).send("OK"));
 
-app.post("/event", async (request, response) => {
+app.post("/event", authenticateToken, async (request, response) => {
 	const event = request.body;
-	if (!event?.session_id || !event?.type || !event?.target) {
-		return response.status(400).end();
+	if (!event?.type || !event?.target) {
+		return response.status(400).json({ error: 'Event type and target required' });
 	}
 
 	try {
+		event.user_id = new ObjectId(request.userId);
 		event.timestamp = new Date();
 		await eventsCollection.insertOne(event);
-		response.status(204).end();
+		response.status(201).json({ message: 'Event saved successfully' });
 	} catch (error) {
 		console.error("Failed to save event:", error);
-		response.status(500).end();
+		response.status(500).json({ error: 'Failed to save event' });
 	}
 });
 
@@ -193,11 +194,9 @@ function buildFeatures(events) {
 	};
 }
 
-app.get("/profile", async (request, response) => {
-	const sessionId = request.query.session_id;
-
+app.get("/profile", authenticateToken, async (request, response) => {
 	try {
-		const events = await eventsCollection.find({ session_id: sessionId }).toArray();
+		const events = await eventsCollection.find({ user_id: new ObjectId(request.userId) }).toArray();
 		const features = buildFeatures(events);
 
 		const systemPrompt = "You are a classifier. Output ONLY valid JSON per schema. No prose.";
@@ -269,13 +268,13 @@ app.post("/api/chat", async (request, response) => {
 	}
 });
 
-app.delete("/reset", async (_request, response) => {
+app.delete("/reset", authenticateToken, async (request, response) => {
 	try {
-		await eventsCollection.deleteMany({});
-		response.status(200).json({ message: "Database cleared." });
+		await eventsCollection.deleteMany({ user_id: new ObjectId(request.userId) });
+		response.status(200).json({ message: "Your data cleared successfully." });
 	} catch (error) {
-		console.error("Failed to clear database:", error);
-		response.status(500).json({ error: "Failed to clear database" });
+		console.error("Failed to clear user data:", error);
+		response.status(500).json({ error: "Failed to clear data" });
 	}
 });
 

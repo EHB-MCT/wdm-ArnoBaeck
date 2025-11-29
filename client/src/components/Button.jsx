@@ -1,22 +1,11 @@
 import { useState } from "react";
+import axios from "axios";
 
 function Button({ label = "Unknown", onClick }) {
   const [hoverStarted, setHoverStarted] = useState(null);
 
-  const sessionId =
-    localStorage.getItem("sessionId") ||
-    (() => {
-      const id = crypto.randomUUID();
-      localStorage.setItem("sessionId", id);
-      return id;
-    })();
-
   function sendEvent(event) {
-    fetch("http://localhost:3000/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(event),
-    }).catch(() => {});
+    axios.post("http://localhost:3000/event", event).catch(() => {});
   }
 
   const target = label ? String(label).toLowerCase() : null;
@@ -39,8 +28,6 @@ function Button({ label = "Unknown", onClick }) {
         const hover_ms = Math.round(performance.now() - hoverStarted);
         console.log(`hover ${target}: ${hover_ms}ms`);
         sendEvent({
-          session_id: sessionId,
-          ts: new Date().toISOString(),
           type: "hover",
           target,
           hover_ms,
@@ -52,8 +39,6 @@ function Button({ label = "Unknown", onClick }) {
         if (isExcluded) return;
         console.log(`click ${target}`);
         sendEvent({
-          session_id: sessionId,
-          ts: new Date().toISOString(),
           type: "click",
           target,
           hover_ms: 0,

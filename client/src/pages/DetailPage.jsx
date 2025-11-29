@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "../components/Button";
 import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 import "../styles/Details.css";
 
 export default function DetailPage() {
@@ -10,9 +11,6 @@ export default function DetailPage() {
   const [result, setResult] = useState(null);
 
   async function handleProfile() {
-    const sessionId = localStorage.getItem("sessionId");
-    if (!sessionId) return;
-
     setResult(null);
     setLoading(true);
     setTimer(0);
@@ -25,8 +23,8 @@ export default function DetailPage() {
     }, 300);
 
     try {
-      const res = await fetch(`http://localhost:3000/profile?session_id=${sessionId}`);
-      const data = await res.json();
+      const res = await axios.get('http://localhost:3000/profile');
+      const data = res.data;
       clearInterval(intervalId);
       setResult(data);
     } catch {
@@ -38,10 +36,14 @@ export default function DetailPage() {
   }
 
   async function handleReset() {
-    const ok = confirm("Are you sure you want to clear all data?");
+    const ok = confirm("Are you sure you want to clear your data?");
     if (!ok) return;
-    await fetch("http://localhost:3000/reset", { method: "DELETE" });
-    setResult({ message: "Database cleared." });
+    try {
+      await axios.delete("http://localhost:3000/reset");
+      setResult({ message: "Your data cleared successfully." });
+    } catch {
+      setResult({ error: "Failed to clear data." });
+    }
   }
 
   return (
