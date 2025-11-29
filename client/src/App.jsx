@@ -1,4 +1,4 @@
-import DetailPage from './images/FakeBrokerCore/pages/DetailPage'
+import DetailPage from './pages/DetailPage'
 
 function App() {
     return (
