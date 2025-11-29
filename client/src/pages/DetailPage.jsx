@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Button from "../components/Button";
-import "../Styles/Details.css";
+import { useAuth } from "../contexts/AuthContext";
+import "../styles/Details.css";
 
 export default function DetailPage() {
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
   const [result, setResult] = useState(null);
@@ -45,7 +47,15 @@ export default function DetailPage() {
   return (
     <main className="page">
       <header className="page__header">
-        <h1 className="title">Fake Broker Dashboard</h1>
+        <div className="header-content">
+          <h1 className="title">Fake Broker Dashboard</h1>
+          <div className="user-info">
+            <span>Welcome, {user?.username}!</span>
+            <button onClick={logout} className="logout-button">
+              Logout
+            </button>
+          </div>
+        </div>
       </header>
 
       <section className="controls">

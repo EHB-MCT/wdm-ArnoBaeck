@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
+import { hashPassword, comparePassword, generateToken, verifyToken } from "./auth.js";
 
 const app = express();
 app.use(cors());
@@ -13,6 +14,7 @@ const MODEL = "llama3";
 
 let db;
 let eventsCollection;
+let usersCollection;
 
 async function connectToDatabase() {
 	try {
@@ -20,12 +22,134 @@ async function connectToDatabase() {
 		await client.connect();
 		db = client.db();
 		eventsCollection = db.collection("events");
+		usersCollection = db.collection("users");
 		console.log("Connected to MongoDB");
 	} catch (error) {
 		console.error("Failed to connect to MongoDB:", error);
 		process.exit(1);
 	}
 }
+
+const authenticateToken = (req, res, next) => {
+	const authHeader = req.headers['authorization'];
+	const token = authHeader && authHeader.split(' ')[1];
+
+	if (!token) {
+		return res.status(401).json({ error: 'Access token required' });
+	}
+
+	try {
+		const decoded = verifyToken(token);
+		req.userId = decoded.userId;
+		next();
+	} catch (error) {
+		return res.status(403).json({ error: 'Invalid or expired token' });
+	}
+};
+
+app.post("/api/auth/register", async (req, res) => {
+	const { username, email, password } = req.body;
+
+	if (!username || !email || !password) {
+		return res.status(400).json({ error: 'Username, email, and password required' });
+	}
+
+	if (password.length < 6) {
+		return res.status(400).json({ error: 'Password must be at least 6 characters' });
+	}
+
+	try {
+		const existingUser = await usersCollection.findOne({ 
+			$or: [{ email }, { username }] 
+		});
+
+		if (existingUser) {
+			return res.status(400).json({ error: 'User already exists' });
+		}
+
+		const hashedPassword = await hashPassword(password);
+		const result = await usersCollection.insertOne({
+			username,
+			email,
+			password: hashedPassword,
+			createdAt: new Date()
+		});
+
+		const token = generateToken(result.insertedId);
+
+		res.status(201).json({
+			message: 'User created successfully',
+			token,
+			user: {
+				id: result.insertedId,
+				username,
+				email
+			}
+		});
+	} catch (error) {
+		console.error('Registration error:', error);
+		res.status(500).json({ error: 'Failed to create user' });
+	}
+});
+
+app.post("/api/auth/login", async (req, res) => {
+	const { email, password } = req.body;
+
+	if (!email || !password) {
+		return res.status(400).json({ error: 'Email and password required' });
+	}
+
+	try {
+		const user = await usersCollection.findOne({ email });
+
+		if (!user) {
+			return res.status(401).json({ error: 'Invalid credentials' });
+		}
+
+		const isValidPassword = await comparePassword(password, user.password);
+
+		if (!isValidPassword) {
+			return res.status(401).json({ error: 'Invalid credentials' });
+		}
+
+		const token = generateToken(user._id);
+
+		res.json({
+			message: 'Login successful',
+			token,
+			user: {
+				id: user._id,
+				username: user.username,
+				email: user.email
+			}
+		});
+	} catch (error) {
+		console.error('Login error:', error);
+		res.status(500).json({ error: 'Failed to login' });
+	}
+});
+
+app.get("/api/auth/profile", authenticateToken, async (req, res) => {
+	try {
+		const user = await usersCollection.findOne({ _id: new ObjectId(req.userId) });
+
+		if (!user) {
+			return res.status(404).json({ error: 'User not found' });
+		}
+
+		res.json({
+			user: {
+				id: user._id,
+				username: user.username,
+				email: user.email,
+				createdAt: user.createdAt
+			}
+		});
+	} catch (error) {
+		console.error('Profile error:', error);
+		res.status(500).json({ error: 'Failed to fetch profile' });
+	}
+});
 
 app.get("/", (_request, response) => response.status(200).send("OK"));
 
@@ -79,12 +203,12 @@ app.get("/profile", async (request, response) => {
 		const systemPrompt = "You are a classifier. Output ONLY valid JSON per schema. No prose.";
 		const groups = ["Cautious", "Balanced", "Opportunistic", "Impulsive", "Exploratory"];
 		const userPrompt = `
-Classify the user into one of ${JSON.stringify(groups)} using ONLY these FEATURES.
-If uncertain, choose "Balanced".
-Schema: {"profile_type": string, "confidence": number, "signals": [string]}
-FEATURES:
-${JSON.stringify(features)}
-Return compact JSON only.`.trim();
+ Classify the user into one of ${JSON.stringify(groups)} using ONLY these FEATURES.
+ If uncertain, choose "Balanced".
+ Schema: {"profile_type": string, "confidence": number, "signals": [string]}
+ FEATURES:
+ ${JSON.stringify(features)}
+ Return compact JSON only.`.trim();
 
 		try {
 			const ollamaResponse = await fetch(`${OLLAMA_URL}/api/generate`, {
