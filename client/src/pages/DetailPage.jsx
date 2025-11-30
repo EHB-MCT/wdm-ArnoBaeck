@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Button from "../components/Button";
+import PriceChart from "../components/PriceChart";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import "../styles/Details.css";
@@ -46,6 +47,14 @@ export default function DetailPage() {
     }
   }
 
+  const handleBuy = () => {
+    console.log("Buy button clicked");
+  };
+
+  const handleSell = () => {
+    console.log("Sell button clicked");
+  };
+
   return (
     <main className="page">
       <header className="page__header">
@@ -60,40 +69,40 @@ export default function DetailPage() {
         </div>
       </header>
 
-      <section className="controls">
-        <div className="controls__row">
-          <Button label="Buy" />
-          <Button label="Sell" />
-        </div>
-        <div className="controls__row">
-          <Button label="Profile" onClick={handleProfile} />
-          <Button label="Reset Database" onClick={handleReset} />
-        </div>
-        {loading && (
-          <p className="info">Generating profile… <strong>{timer}s</strong></p>
-        )}
-      </section>
+      <div className="dashboard-content">
+        <PriceChart onBuy={handleBuy} onSell={handleSell} />
 
-      {result && (
-        <section className="result">
-          {result.error && <div className="alert alert--error">{result.error}</div>}
-          {result.message && <div className="alert alert--ok">{result.message}</div>}
-
-          {result.features && (
-            <div className="card">
-              <h2 className="card__title">Features</h2>
-              <pre className="code">{JSON.stringify(result.features, null, 2)}</pre>
-            </div>
-          )}
-
-          {result.profile && (
-            <div className="card">
-              <h2 className="card__title">Profile</h2>
-              <pre className="code">{JSON.stringify(result.profile, null, 2)}</pre>
-            </div>
+        <section className="controls">
+          <div className="controls__row">
+            <Button label="Profile" onClick={handleProfile} />
+            <Button label="Reset Database" onClick={handleReset} />
+          </div>
+          {loading && (
+            <p className="info">Generating profile… <strong>{timer}s</strong></p>
           )}
         </section>
-      )}
+
+        {result && (
+          <section className="result">
+            {result.error && <div className="alert alert--error">{result.error}</div>}
+            {result.message && <div className="alert alert--ok">{result.message}</div>}
+
+            {result.features && (
+              <div className="card">
+                <h2 className="card__title">Features</h2>
+                <pre className="code">{JSON.stringify(result.features, null, 2)}</pre>
+              </div>
+            )}
+
+            {result.profile && (
+              <div className="card">
+                <h2 className="card__title">Profile</h2>
+                <pre className="code">{JSON.stringify(result.profile, null, 2)}</pre>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </main>
   );
 }

@@ -1,0 +1,183 @@
+.price-chart {
+	background: var(--panel);
+	border: 1px solid #222831;
+	border-radius: var(--radius);
+	padding: 24px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chart-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 24px;
+}
+
+.chart-title-section {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.chart-header h2 {
+	margin: 0;
+	color: var(--text);
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.price-change {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 0.9rem;
+}
+
+.change-value {
+	font-weight: 600;
+	font-size: 1rem;
+}
+
+.change-percent {
+	opacity: 0.8;
+}
+
+.change-value.positive,
+.change-percent.positive {
+	color: var(--ok);
+}
+
+.change-value.negative,
+.change-percent.negative {
+	color: var(--err);
+}
+
+.current-price {
+	font-size: 2.5rem;
+	font-weight: bold;
+	color: var(--text);
+	text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.chart-container {
+	background: var(--panel-2);
+	border-radius: 12px;
+	padding: 20px;
+	margin-bottom: 24px;
+	border: 1px solid #283041;
+	height: 400px;
+	position: relative;
+}
+
+.chart-canvas {
+	width: 100%;
+	height: 100%;
+	border-radius: 8px;
+}
+
+.trading-controls {
+	display: flex;
+	gap: 16px;
+	justify-content: center;
+}
+
+.trading-controls .btn {
+	padding: 14px 40px;
+	border: none;
+	border-radius: 10px;
+	font-size: 1.1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	position: relative;
+	overflow: hidden;
+}
+
+.trading-controls .btn::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.5s;
+}
+
+.trading-controls .btn:hover::before {
+	left: 100%;
+}
+
+.trading-controls .btn--buy {
+	background: linear-gradient(135deg, var(--buy), #2ba83b);
+	box-shadow: 0 4px 15px rgba(26, 143, 42, 0.3);
+}
+
+.trading-controls .btn--sell {
+	background: linear-gradient(135deg, var(--sell), #d63031);
+	box-shadow: 0 4px 15px rgba(179, 27, 27, 0.3);
+}
+
+.trading-controls .btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.trading-controls .btn:active {
+	transform: translateY(0);
+}
+
+.custom-tooltip {
+	background: rgba(26, 31, 39, 0.95);
+	border: 1px solid #2a3441;
+	border-radius: 8px;
+	padding: 12px;
+	color: #e7ecf3;
+	font-size: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-time {
+	margin: 0 0 4px 0;
+	opacity: 0.8;
+	font-size: 11px;
+}
+
+.tooltip-price {
+	margin: 0;
+	font-weight: bold;
+	font-size: 14px;
+	color: #00ff88;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.price-chart {
+		padding: 16px;
+	}
+	
+	.chart-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+	}
+	
+	.current-price {
+		font-size: 2rem;
+	}
+	
+	.chart-container {
+		height: 300px;
+		padding: 16px;
+	}
+	
+	.trading-controls {
+		flex-direction: column;
+	}
+	
+	.trading-controls .btn {
+		width: 100%;
+	}
+}

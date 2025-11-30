@@ -278,6 +278,57 @@ app.delete("/reset", authenticateToken, async (request, response) => {
 	}
 });
 
+let lastPrice = 100;
+let priceHistory = [];
+
+function generateInitialPrices() {
+	const initialPrice = 100;
+	lastPrice = initialPrice;
+	priceHistory = [{
+		price: initialPrice,
+		timestamp: new Date(Date.now() - 19 * 30000).toISOString()
+	}];
+	
+	for (let i = 1; i < 20; i++) {
+		const maxChangePercent = 0.05;
+		const change = (Math.random() - 0.5) * 2 * maxChangePercent;
+		const newPrice = lastPrice * (1 + change);
+		lastPrice = Number(newPrice.toFixed(2));
+		
+		priceHistory.push({
+			price: lastPrice,
+			timestamp: new Date(Date.now() - (19 - i) * 30000).toISOString()
+		});
+	}
+}
+
+function randomPrice() {
+	const maxChangePercent = 0.05;
+	const change = (Math.random() - 0.5) * 2 * maxChangePercent;
+	const newPrice = lastPrice * (1 + change);
+	lastPrice = Number(newPrice.toFixed(2));
+	
+	const newPricePoint = {
+		price: lastPrice,
+		timestamp: new Date().toISOString()
+	};
+	
+	priceHistory.push(newPricePoint);
+	if (priceHistory.length > 50) {
+		priceHistory = priceHistory.slice(-50);
+	}
+	
+	return lastPrice;
+}
+
+app.get("/price", (_req, res) => {
+	const price = randomPrice();
+	const timestamp = new Date().toISOString();
+	res.json({ price, timestamp, history: priceHistory });
+});
+
 connectToDatabase().then(() => {
+	generateInitialPrices();
+	console.log(`Generated ${priceHistory.length} initial price points`);
 	app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
