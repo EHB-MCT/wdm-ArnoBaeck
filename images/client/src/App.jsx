@@ -3,9 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DetailPage from './pages/DetailPage';
+import AdminDashboard from './pages/AdminDashboard';
 import './styles/App.css';
 
 function App() {
@@ -23,6 +25,14 @@ function App() {
                   <ProtectedRoute>
                     <DetailPage />
                   </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <AdminProtectedRoute>
+                    <AdminDashboard />
+                  </AdminProtectedRoute>
                 } 
               />
               <Route path="/" element={<Navigate to="/detail" replace />} />

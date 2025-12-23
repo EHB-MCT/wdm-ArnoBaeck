@@ -89,6 +89,15 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const isAdmin = () => {
+    if (!user || !user.email) return false;
+    const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
+    console.log('User email:', user.email);
+    console.log('Admin emails:', adminEmails);
+    console.log('Is admin:', adminEmails.includes(user.email));
+    return adminEmails.includes(user.email);
+  };
+
   const value = {
     user,
     token,
@@ -96,7 +105,8 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isAdmin: isAdmin()
   };
 
   return (

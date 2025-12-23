@@ -49,6 +49,34 @@ const authenticateToken = (req, res, next) => {
 	}
 };
 
+const authenticateAdmin = async (req, res, next) => {
+	const authHeader = req.headers["authorization"];
+	const token = authHeader && authHeader.split(" ")[1];
+
+	if (!token) {
+		return res.status(401).json({ error: "Access token required" });
+	}
+
+	try {
+		const decoded = verifyToken(token);
+		const user = await usersCollection.findOne({ _id: new ObjectId(decoded.userId) });
+		
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
+		if (!adminEmails.includes(user.email)) {
+			return res.status(403).json({ error: "Admin access required" });
+		}
+
+		req.userId = decoded.userId;
+		next();
+	} catch (error) {
+		return res.status(403).json({ error: "Invalid or expired token" });
+	}
+};
+
 app.post("/api/auth/register", async (req, res) => {
 	const { username, email, password } = req.body;
 
@@ -152,6 +180,68 @@ app.get("/api/auth/profile", authenticateToken, async (req, res) => {
 	} catch (error) {
 		console.error("Profile error:", error);
 		res.status(500).json({ error: "Failed to fetch profile" });
+	}
+});
+
+app.get("/api/admin/users", authenticateToken, async (req, res) => {
+	try {
+		const users = await usersCollection.find({}, { 
+			projection: { 
+				password: 0 
+			} 
+		}).toArray();
+		
+		const formattedUsers = users.map(user => ({
+			id: user._id,
+			username: user.username,
+			email: user.email,
+			createdAt: user.createdAt,
+			profile: user.profile,
+			profileUpdatedAt: user.profile_updated_at
+		}));
+		
+		res.json(formattedUsers);
+	} catch (error) {
+		console.error("Failed to fetch users:", error);
+		res.status(500).json({ error: "Failed to fetch users" });
+	}
+});
+
+app.get("/api/admin/users/:userId/events", authenticateToken, async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const events = await eventsCollection.find({ user_id: new ObjectId(userId) }).toArray();
+		res.json(events);
+	} catch (error) {
+		console.error("Failed to fetch user events:", error);
+		res.status(500).json({ error: "Failed to fetch user events" });
+	}
+});
+
+app.get("/api/admin/users/:userId/sessions", authenticateToken, async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const sessions = await sessionsCollection.find({ user_id: new ObjectId(userId) }).toArray();
+		res.json(sessions);
+	} catch (error) {
+		console.error("Failed to fetch user sessions:", error);
+		res.status(500).json({ error: "Failed to fetch user sessions" });
+	}
+});
+
+app.get("/api/admin/users/:userId/profile", authenticateToken, async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+		
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+		
+		res.json(user.profile || null);
+	} catch (error) {
+		console.error("Failed to fetch user profile:", error);
+		res.status(500).json({ error: "Failed to fetch user profile" });
 	}
 });
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import PriceChart from "../components/PriceChart";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,7 +7,8 @@ import axios from "axios";
 import "../styles/Details.css";
 
 export default function DetailPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
   const [result, setResult] = useState(null);
@@ -62,6 +64,9 @@ export default function DetailPage() {
           <h1 className="title">Fake Broker Dashboard</h1>
           <div className="user-info">
             <span>Welcome, {user?.username}!</span>
+            <button onClick={() => navigate('/admin')} className="admin-button">
+              Admin Dashboard
+            </button>
             <button onClick={logout} className="logout-button">
               Logout
             </button>
