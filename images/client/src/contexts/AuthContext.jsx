@@ -90,11 +90,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = () => {
-    if (!user || !user.email) return false;
+    if (!user || !user.email) {
+      console.log('No user or user email');
+      return false;
+    }
     const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
+    console.log('VITE_ADMIN_EMAILS from env:', import.meta.env.VITE_ADMIN_EMAILS);
     console.log('User email:', user.email);
-    console.log('Admin emails:', adminEmails);
-    console.log('Is admin:', adminEmails.includes(user.email));
+    console.log('Admin emails array:', adminEmails);
+    console.log('Includes check:', adminEmails.includes(user.email));
     return adminEmails.includes(user.email);
   };
 
@@ -106,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!user,
-    isAdmin: isAdmin()
+    isAdmin: isAdmin
   };
 
   return (

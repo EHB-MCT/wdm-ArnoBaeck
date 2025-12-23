@@ -8,6 +8,15 @@ import "../styles/Details.css";
 
 export default function DetailPage() {
   const { user, logout, isAdmin } = useAuth();
+  
+  // Debug admin check
+  if (user) {
+    const adminEmails = ['admin@email.be'];
+    console.log('=== ADMIN DEBUG ===');
+    console.log('User email:', user.email);
+    console.log('Hardcoded admin emails:', adminEmails);
+    console.log('Should show button:', adminEmails.includes(user.email));
+  }
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
@@ -64,9 +73,14 @@ export default function DetailPage() {
           <h1 className="title">Fake Broker Dashboard</h1>
           <div className="user-info">
             <span>Welcome, {user?.username}!</span>
-            <button onClick={() => navigate('/admin')} className="admin-button">
-              Admin Dashboard
-            </button>
+            {user && user.email === 'admin@email.be' && (
+              <button onClick={() => {
+                console.log('Admin button clicked, navigating to /admin');
+                navigate('/admin');
+              }} className="admin-button">
+                Admin Dashboard
+              </button>
+            )}
             <button onClick={logout} className="logout-button">
               Logout
             </button>
