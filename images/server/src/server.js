@@ -142,7 +142,9 @@ app.get("/api/auth/profile", authenticateToken, async (req, res) => {
 				id: user._id,
 				username: user.username,
 				email: user.email,
-				createdAt: user.createdAt
+				createdAt: user.createdAt,
+				profile: user.profile,
+				profileUpdatedAt: user.profile_updated_at
 			}
 		});
 	} catch (error) {
@@ -232,6 +234,21 @@ app.get("/profile", authenticateToken, async (request, response) => {
 					confidence: 0.5,
 					signals: ["fallback parse"],
 				};
+			}
+
+			// Save profile to database
+			try {
+				await usersCollection.updateOne(
+					{ _id: new ObjectId(request.userId) },
+					{ 
+						$set: { 
+							profile: profile,
+							profile_updated_at: new Date()
+						}
+					}
+				);
+			} catch (saveError) {
+				console.error("Failed to save profile:", saveError);
 			}
 
 			response.json({ features, profile });

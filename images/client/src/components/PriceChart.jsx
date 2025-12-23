@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Button from './Button';
 import '../styles/PriceChart.css';
 
 function PriceChart({ onBuy, onSell }) {
@@ -238,12 +239,8 @@ function PriceChart({ onBuy, onSell }) {
 			</div>
 			
 			<div className="trading-controls">
-				<button className="btn btn--buy" onClick={onBuy}>
-					Buy
-				</button>
-				<button className="btn btn--sell" onClick={onSell}>
-					Sell
-				</button>
+				<Button label="Buy" onClick={onBuy} />
+				<Button label="Sell" onClick={onSell} />
 			</div>
 		</div>
 	);

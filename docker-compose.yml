@@ -1,7 +1,7 @@
 services:
   client:
     build:
-      context: ./client
+      context: ./images/client
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -15,7 +15,7 @@ services:
 
   server:
     build:
-      context: ./server
+      context: ./images/server
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
