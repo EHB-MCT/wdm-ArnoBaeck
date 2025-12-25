@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "../components/Button";
-import "../Styles/Details.css";
+import Navigation from "../components/Navigation";
+import "../styles/Details.css";
 
 export default function DetailPage() {
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,9 @@ export default function DetailPage() {
   }
 
   return (
-    <main className="page">
+    <div>
+      <Navigation />
+      <main className="page">
       <header className="page__header">
         <h1 className="title">Fake Broker Dashboard</h1>
       </header>
@@ -83,5 +86,6 @@ export default function DetailPage() {
         </section>
       )}
     </main>
+    </div>
   );
 }
