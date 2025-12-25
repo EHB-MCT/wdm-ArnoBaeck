@@ -51,6 +51,7 @@ const LoginPage = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
               required
             />
           </div>
@@ -62,6 +63,7 @@ const LoginPage = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="current-password"
               required
             />
           </div>
