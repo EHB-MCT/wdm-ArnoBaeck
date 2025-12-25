@@ -561,6 +561,104 @@ app.delete("/reset", authenticateToken, async (request, response) => {
 	}
 });
 
+function authenticateAdmin(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  console.log('Auth header:', authHeader);
+  console.log('Token:', token ? 'present' : 'missing');
+
+  if (!token) {
+    return res.status(401).json({ error: "Access token required" });
+  }
+
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: "Invalid or expired token" });
+    }
+    
+    try {
+      const currentUser = await usersCollection.findOne({ _id: new ObjectId(user.userId) });
+      const adminEmails = process.env.VITE_ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+      
+      if (!currentUser || !adminEmails.includes(currentUser.email.trim())) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      req.user = user;
+      next();
+    } catch (dbError) {
+      return res.status(500).json({ error: "Failed to verify admin status" });
+    }
+  });
+}
+
+app.get("/api/admin/search-users", authenticateAdmin, async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.trim().length < 1) {
+      return res.status(400).json({ error: "Search query required" });
+    }
+    
+    const searchQuery = q.trim();
+    const adminEmails = process.env.VITE_ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+    
+    const users = await usersCollection.find({
+      $or: [
+        { username: { $regex: searchQuery, $options: 'i' } },
+        { email: { $regex: searchQuery, $options: 'i' } }
+      ]
+    }).toArray();
+    
+    const usersWithAdminFlag = users.map(user => ({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      created_at: user.createdAt,
+      is_admin: adminEmails.includes(user.email.trim()),
+      profile: user.profile,
+      profile_updated_at: user.profile_updated_at
+    }));
+    
+    res.json({ users: usersWithAdminFlag });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to search users" });
+  }
+});
+
+app.get("/api/admin/user/:userId/data", authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { filter = 'all' } = req.query;
+    
+    const events = await eventsCollection.find({ user_id: new ObjectId(userId) }).toArray();
+    const allSessionEvents = await sessionsCollection.find({ user_id: new ObjectId(userId) }).toArray();
+    
+    let filteredEvents = events;
+    let filteredSessions = allSessionEvents;
+    
+    if (filter !== 'all') {
+      filteredEvents = events.filter(event => event.session_id === filter);
+      filteredSessions = allSessionEvents.filter(session => session.session_id === filter);
+    }
+    
+    const features = buildFeatures(filteredEvents, filteredSessions);
+    
+    res.json({
+      user_id: userId,
+      filter: filter,
+      events: filteredEvents,
+      sessions: filteredSessions,
+      features: features,
+      total_events: events.length,
+      total_sessions: allSessionEvents.filter(s => s.type === 'session_start').length
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user data" });
+  }
+});
+
 app.get("/price", (_req, res) => {
 	const price = randomPrice();
 	const timestamp = new Date().toISOString();

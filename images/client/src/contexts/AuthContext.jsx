@@ -23,6 +23,11 @@ export const AuthProvider = ({ children }) => {
     },
   });
 
+  // Set initial token if it exists
+  if (token) {
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
   useEffect(() => {
     if (token) {
       axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
