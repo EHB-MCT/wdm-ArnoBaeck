@@ -12,7 +12,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
   const [result, setResult] = useState(null);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [priceData, setPriceData] = useState(() => generatePricePoints());
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function HomePage() {
           </div>
           <div className="controls__row">
             <Button label="Profile" onClick={handleProfile} />
-            <Button label="Reset Database" onClick={handleReset} />
+            {user && isAdmin() && <Button label="Reset Database" onClick={handleReset} />}
           </div>
           {loading && (
             <p className="info">Generating profile… <strong>{timer}s</strong></p>
