@@ -174,12 +174,13 @@ app.post("/event", authenticateToken, async (request, response) => {
 	}
 
 	try {
+		event.user_id = new ObjectId(request.user.userId);
 		event.timestamp = new Date();
 		await eventsCollection.insertOne(event);
-		response.status(204).end();
+		response.status(201).json({ message: "Event saved successfully" });
 	} catch (error) {
 		console.error("Failed to save event:", error);
-		response.status(500).end();
+		response.status(500).json({ error: "Failed to save event" });
 	}
 });
 
@@ -208,11 +209,13 @@ function buildFeatures(events) {
 }
 
 app.get("/profile", authenticateToken, async (request, response) => {
-	const sessionId = request.query.session_id;
-
 	try {
-		const events = await eventsCollection.find({ session_id: sessionId }).toArray();
+		console.log("Fetching events for user_id:", request.user.userId);
+		const events = await eventsCollection.find({ user_id: new ObjectId(request.user.userId) }).toArray();
+		console.log("Found events:", events.length);
+		console.log("Events:", events);
 		const features = buildFeatures(events);
+		console.log("Features:", features);
 
 		const systemPrompt = "You are a classifier. Output ONLY valid JSON per schema. No prose.";
 		const groups = ["Cautious", "Balanced", "Opportunistic", "Impulsive", "Exploratory"];

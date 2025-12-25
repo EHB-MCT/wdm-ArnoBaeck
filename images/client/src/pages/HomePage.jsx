@@ -9,8 +9,8 @@ export default function HomePage() {
   const [result, setResult] = useState(null);
 
   async function handleProfile() {
-    const sessionId = localStorage.getItem("sessionId");
-    if (!sessionId) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
     setResult(null);
     setLoading(true);
@@ -24,7 +24,11 @@ export default function HomePage() {
     }, 300);
 
     try {
-      const res = await fetch(`http://localhost:3000/profile?session_id=${sessionId}`);
+      const res = await fetch("http://localhost:3000/profile", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       const data = await res.json();
       clearInterval(intervalId);
       setResult(data);
@@ -39,7 +43,13 @@ export default function HomePage() {
   async function handleReset() {
     const ok = confirm("Are you sure you want to clear all data?");
     if (!ok) return;
-    await fetch("http://localhost:3000/reset", { method: "DELETE" });
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:3000/reset", { 
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
     setResult({ message: "Database cleared." });
   }
 
