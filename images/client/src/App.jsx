@@ -2,9 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import DetailPage from './images/FakeBrokerCore/pages/DetailPage';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
+import AdminPage from './pages/AdminPage';
 import './styles/Auth.css';
 
 function App() {
@@ -18,8 +21,24 @@ function App() {
             path="/" 
             element={
               <ProtectedRoute>
-                <DetailPage />
+                <HomePage />
               </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <AdminProtectedRoute>
+                <AdminPage />
+              </AdminProtectedRoute>
             } 
           />
         </Routes>
