@@ -18,22 +18,22 @@ export default function Navigation() {
 
 	return (
 		<nav style={styles.nav}>
-			<ul style={styles.ul}>
-				<li style={styles.li}>
-					<Link to="/" style={styles.link}>Home</Link>
-				</li>
-				<li style={styles.li}>
-					<Link to="/dashboard" style={styles.link}>Dashboard</Link>
-				</li>
-				<li style={styles.li}>
-					<AdminLink />
-				</li>
-				<li style={styles.li}>
-					<button onClick={handleLogout} style={styles.logoutButton}>
-						Logout
-					</button>
-				</li>
-			</ul>
+			<div style={styles.wrapper}>
+				<ul style={styles.ul}>
+					<li style={styles.li}>
+						<Link to="/" style={styles.link}>Home</Link>
+					</li>
+					<li style={styles.li}>
+						<Link to="/dashboard" style={styles.link}>Dashboard</Link>
+					</li>
+					<li style={styles.li}>
+						<AdminLink />
+					</li>
+				</ul>
+				<button onClick={handleLogout} style={styles.logoutButton}>
+					Logout
+				</button>
+			</div>
 		</nav>
 	);
 }
@@ -41,9 +41,16 @@ export default function Navigation() {
 const styles = {
 	nav: {
 		backgroundColor: '#ffffff',
-		padding: '1rem 2rem',
 		boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
 		borderBottom: '1px solid #e5e7eb',
+	},
+	wrapper: {
+		maxWidth: '900px',
+		margin: '0 auto',
+		padding: '1rem 2rem',
+		display: 'flex',
+		alignItems: 'center',
+		justifyContent: 'space-between',
 	},
 	ul: {
 		listStyle: 'none',
@@ -74,7 +81,6 @@ const styles = {
 		cursor: 'pointer',
 		fontWeight: '500',
 		transition: 'background-color 0.2s ease',
-		marginLeft: 'auto',
 		fontSize: '0.9rem',
 	},
 };
