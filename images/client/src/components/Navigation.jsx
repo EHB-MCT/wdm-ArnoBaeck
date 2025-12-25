@@ -1,6 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+function AdminLink() {
+	const { user, isAdmin } = useAuth();
+	
+	if (!user || !isAdmin()) return null;
+	
+	return <Link to="/admin" style={styles.link}>Admin</Link>;
+}
+
 export default function Navigation() {
 	const { logout } = useAuth();
 
@@ -18,7 +26,7 @@ export default function Navigation() {
 					<Link to="/dashboard" style={styles.link}>Dashboard</Link>
 				</li>
 				<li style={styles.li}>
-					<Link to="/admin" style={styles.link}>Admin</Link>
+					<AdminLink />
 				</li>
 				<li style={styles.li}>
 					<button onClick={handleLogout} style={styles.logoutButton}>
