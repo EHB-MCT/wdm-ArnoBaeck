@@ -26,13 +26,12 @@ export const AuthProvider = ({ children }) => {
     return instance;
   }, [token]);
 
-  useEffect(() => {
-    if (token) {
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token, fetchUser]);
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    delete axiosInstance.defaults.headers.common['Authorization'];
+  }, [axiosInstance]);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -45,6 +44,14 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, [axiosInstance, logout]);
+
+  useEffect(() => {
+    if (token) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token, fetchUser]);
 
   const login = async (email, password) => {
     try {
@@ -79,13 +86,6 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: errorMessage };
     }
   };
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    delete axiosInstance.defaults.headers.common['Authorization'];
-  }, [axiosInstance]);
 
   const isAdmin = () => {
     if (!user) return false;
