@@ -1,0 +1,78 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page__header {
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.controls {
+  margin-bottom: 2rem;
+}
+
+.controls__row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.info {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #7f8c8d;
+}
+
+.result {
+  margin-top: 2rem;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.card__title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.code {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.alert--error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert--ok {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
