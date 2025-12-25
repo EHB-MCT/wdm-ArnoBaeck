@@ -1,8 +1,145 @@
 .dashboard {
   padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .dashboard h1 {
   color: #333;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-loading,
+.dashboard-error {
+  text-align: center;
+  padding: 2rem;
+}
+
+.dashboard-error {
+  color: #e74c3c;
+}
+
+.user-menu {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1.25rem;
+  border: none;
+  border-bottom: 2px solid #f0f0f0;
+  font-size: 1rem;
+  outline: none;
+  background: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-bottom-color: #3498db;
+  background: #fff;
+}
+
+.user-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.user-item {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-item:hover {
+  background: #f0f8ff;
+  border-left: 4px solid #3498db;
+  padding-left: 1rem;
+}
+
+.user-item:last-child {
+  border-bottom: none;
+}
+
+.username {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.email {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+.user-data {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  border: 1px solid #e8e8e8;
+}
+
+.user-data h2 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.75rem;
+}
+
+.json-display {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1.5rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-height: 70vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid #333;
+}
+
+.json-display::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.json-display::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+.json-display::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.json-display::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
 }
