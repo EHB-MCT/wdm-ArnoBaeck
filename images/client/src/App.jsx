@@ -7,6 +7,7 @@ import AdminProtectedRoute from './components/AdminProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DetailPage from './pages/DetailPage';
+import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import './styles/App.css';
 
@@ -24,6 +25,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
                   </ProtectedRoute>
                 } 
               />
