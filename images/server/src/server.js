@@ -1,18 +1,38 @@
 import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://localhost:8081'],
+  credentials: true
+}));
 
-const PORT = process.env.PORT || 3000;
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP"
+});
+app.use(limiter);
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const PORT = process.env.PORT || 3001;
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
 const MONGODB_URL = process.env.MONGODB_URL || "mongodb://localhost:27017/brokerdb";
 const MODEL = "llama3";
 
 let db;
 let eventsCollection;
+let usersCollection;
 
 async function connectToDatabase() {
 	try {
@@ -20,6 +40,7 @@ async function connectToDatabase() {
 		await client.connect();
 		db = client.db();
 		eventsCollection = db.collection("events");
+		usersCollection = db.collection("users");
 		console.log("Connected to MongoDB");
 	} catch (error) {
 		console.error("Failed to connect to MongoDB:", error);
@@ -27,9 +48,126 @@ async function connectToDatabase() {
 	}
 }
 
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "Access token required" });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: "Invalid or expired token" });
+    }
+    req.user = user;
+    next();
+  });
+}
+
 app.get("/", (_request, response) => response.status(200).send("OK"));
 
-app.post("/event", async (request, response) => {
+app.post("/api/register", async (req, res) => {
+  try {
+    const { email, password, username } = req.body;
+
+    if (!email || !password || !username) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const newUser = {
+      email,
+      username,
+      password: hashedPassword,
+      createdAt: new Date(),
+      isActive: true
+    };
+
+    const result = await usersCollection.insertOne(newUser);
+    
+    const token = jwt.sign(
+      { userId: result.insertedId, email, username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      message: "User created successfully",
+      token,
+      user: { id: result.insertedId, email, username }
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: { id: user._id, email: user.email, username: user.username }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+app.get("/api/me", authenticateToken, async (req, res) => {
+  try {
+    const user = await usersCollection.findOne(
+      { _id: req.user.userId },
+      { projection: { password: 0 } }
+    );
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Failed to get user data" });
+  }
+});
+
+app.post("/event", authenticateToken, async (request, response) => {
 	const event = request.body;
 	if (!event?.session_id || !event?.type || !event?.target) {
 		return response.status(400).end();
@@ -69,7 +207,7 @@ function buildFeatures(events) {
 	};
 }
 
-app.get("/profile", async (request, response) => {
+app.get("/profile", authenticateToken, async (request, response) => {
 	const sessionId = request.query.session_id;
 
 	try {
@@ -129,7 +267,7 @@ Return compact JSON only.`.trim();
 	}
 });
 
-app.post("/api/chat", async (request, response) => {
+app.post("/api/chat", authenticateToken, async (request, response) => {
 	try {
 		const prompt = request.body.prompt ?? "";
 		const ollamaResponse = await fetch(`${OLLAMA_URL}/api/generate`, {
@@ -145,7 +283,7 @@ app.post("/api/chat", async (request, response) => {
 	}
 });
 
-app.delete("/reset", async (_request, response) => {
+app.delete("/reset", authenticateToken, async (_request, response) => {
 	try {
 		await eventsCollection.deleteMany({});
 		response.status(200).json({ message: "Database cleared." });
