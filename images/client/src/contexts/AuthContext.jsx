@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axiosInstance.get('/api/auth/profile');
       setUser(response.data.user);
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+
       logout();
     } finally {
       setLoading(false);

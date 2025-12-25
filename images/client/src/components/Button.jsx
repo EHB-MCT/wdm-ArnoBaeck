@@ -6,22 +6,20 @@ function Button({ label = "Unknown", onClick }) {
 
   function sendEvent(event) {
     const token = localStorage.getItem("token");
-    console.log("Token found:", !!token);
-    console.log("Token value:", token);
+
     
     if (!token) {
-      console.error("No token found in localStorage");
+
       return;
     }
     
-    // Add session_id to event for server validation
     const currentSessionId = localStorage.getItem('currentSessionId') || "unknown-session";
     const eventWithSession = {
       ...event,
       session_id: currentSessionId
     };
     
-    console.log("Sending event with session:", eventWithSession);
+
     
     axios.post("http://localhost:3000/event", eventWithSession, {
       headers: {
@@ -29,12 +27,9 @@ function Button({ label = "Unknown", onClick }) {
         "Content-Type": "application/json"
       }
     }).then(response => {
-      console.log("✅ Event saved successfully:", response.data);
+
     }).catch((error) => {
-      console.error("Failed to send event:", error.response?.data || error.message);
-      console.error("Status:", error.response?.status);
-      console.error("Response data:", error.response?.data);
-      console.error("Full error:", error);
+
     });
   }
 
@@ -56,7 +51,7 @@ function Button({ label = "Unknown", onClick }) {
       onMouseLeave={() => {
         if (isExcluded || hoverStarted == null) return;
         const hover_ms = Math.round(performance.now() - hoverStarted);
-        console.log(`hover ${target}: ${hover_ms}ms`);
+
         sendEvent({
           type: "hover",
           target,
@@ -65,14 +60,17 @@ function Button({ label = "Unknown", onClick }) {
         setHoverStarted(null);
       }}
       onClick={(event) => {
-        if (onClick) onClick(event);
-        if (isExcluded) return;
-        console.log(`click ${target}`);
+        if (isExcluded) {
+          if (onClick) onClick(event);
+          return;
+        }
+
         sendEvent({
           type: "click",
           target,
           hover_ms: 0,
         });
+        if (onClick) onClick(event);
       }}
     >
       {label}

@@ -9,12 +9,9 @@ export const useSessionTracking = (userId) => {
   useEffect(() => {
     if (!userId) return;
 
-    // Generate unique session ID for this browser session
     const newSessionId = `session_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setSessionId(newSessionId);
     localStorage.setItem('currentSessionId', newSessionId);
-
-    // Send session start event
     const sendSessionStart = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -33,15 +30,15 @@ export const useSessionTracking = (userId) => {
             'Content-Type': 'application/json'
           }
         });
-        console.log('Session started:', newSessionId);
+
       } catch (error) {
-        console.error('Failed to send session start:', error);
+
       }
     };
 
     sendSessionStart();
 
-    // Cleanup function for session end
+
     const handleSessionEnd = async () => {
       if (!sessionActive.current) return;
       sessionActive.current = false;
@@ -61,13 +58,13 @@ export const useSessionTracking = (userId) => {
             'Content-Type': 'application/json'
           }
         });
-        console.log('Session ended:', newSessionId, 'Duration:', sessionDuration + 'ms');
+
       } catch (error) {
-        console.error('Failed to send session end:', error);
+
       }
     };
 
-    // Handle various session end scenarios
+
     const handleBeforeUnload = () => {
       handleSessionEnd();
     };

@@ -20,7 +20,7 @@ export default function DetailPage() {
     const intervalId = setInterval(() => {
       const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
       setTimer(seconds);
-      console.info(`Generating profile... ${seconds}s`);
+
     }, 300);
 
     try {

@@ -30,9 +30,9 @@ async function connectToDatabase() {
 		eventsCollection = db.collection("events");
 		usersCollection = db.collection("users");
 		sessionsCollection = db.collection("sessions");
-		console.log("Connected to MongoDB");
+
 	} catch (error) {
-		console.error("Failed to connect to MongoDB:", error);
+
 		process.exit(1);
 	}
 }
@@ -94,7 +94,7 @@ app.post("/api/auth/register", async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.error("Registration error:", error);
+
 		res.status(500).json({ error: "Failed to create user" });
 	}
 });
@@ -131,7 +131,7 @@ app.post("/api/auth/login", async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.error("Login error:", error);
+
 		res.status(500).json({ error: "Failed to login" });
 	}
 });
@@ -155,7 +155,7 @@ app.get("/api/auth/profile", authenticateToken, async (req, res) => {
 			},
 		});
 	} catch (error) {
-		console.error("Profile error:", error);
+
 		res.status(500).json({ error: "Failed to fetch profile" });
 	}
 });
@@ -171,12 +171,10 @@ app.post("/session-event", authenticateToken, async (request, response) => {
 		sessionEvent.user_id = userId;
 		sessionEvent.timestamp = new Date(sessionEvent.timestamp || Date.now());
 
-		// Insert session event
 		await sessionsCollection.insertOne(sessionEvent);
 
-		// For session_start, also create/update session summary
 		if (sessionEvent.type === 'session_start' && sessionEvent.session_id) {
-			console.log("Creating session summary for:", sessionEvent.session_id);
+
 			
 			const result = await sessionsCollection.updateOne(
 				{ 
@@ -203,10 +201,9 @@ app.post("/session-event", authenticateToken, async (request, response) => {
 				{ upsert: true }
 			);
 			
-			console.log("Session summary update result:", result);
+
 		}
 
-		// For session_end, update session summary
 		if (sessionEvent.type === 'session_end' && sessionEvent.session_id) {
 			await sessionsCollection.updateOne(
 				{ 
@@ -226,12 +223,11 @@ app.post("/session-event", authenticateToken, async (request, response) => {
 
 		response.status(201).json({ message: "Session event saved successfully" });
 	} catch (error) {
-		console.error("Failed to save session event:", error);
+
 		response.status(500).json({ error: "Failed to save session event" });
 	}
 });
 
-// Get all session summaries for a user
 app.get("/api/sessions", authenticateToken, async (request, response) => {
 	try {
 		const sessions = await sessionsCollection.find({ 
@@ -241,12 +237,11 @@ app.get("/api/sessions", authenticateToken, async (request, response) => {
 		
 		response.json(sessions);
 	} catch (error) {
-		console.error("Failed to fetch sessions:", error);
+
 		response.status(500).json({ error: "Failed to fetch sessions" });
 	}
 });
 
-// Get events for a specific session
 app.get("/api/sessions/:sessionId/events", authenticateToken, async (request, response) => {
 	try {
 		const { sessionId } = request.params;
@@ -257,7 +252,7 @@ app.get("/api/sessions/:sessionId/events", authenticateToken, async (request, re
 		
 		response.json(events);
 	} catch (error) {
-		console.error("Failed to fetch session events:", error);
+
 		response.status(500).json({ error: "Failed to fetch session events" });
 	}
 });
@@ -275,17 +270,14 @@ app.post("/event", authenticateToken, async (request, response) => {
 		event.user_id = userId;
 		event.timestamp = new Date();
 		
-		// Insert the event
 		await eventsCollection.insertOne(event);
 
-		// Update session summary with event data
 		if (event.session_id && event.session_id !== "unknown-session") {
 			const updateData = {
 				$set: { last_activity: new Date() },
 				$inc: { events_count: 1 }
 			};
 
-			// Update specific counters based on event type and target
 			if (event.type === 'click') {
 				if (event.target === 'buy') {
 					updateData.$inc.clicks_buy = 1;
@@ -312,37 +304,29 @@ app.post("/event", authenticateToken, async (request, response) => {
 
 		response.status(201).json({ message: "Event saved successfully" });
 	} catch (error) {
-		console.error("Failed to save event:", error);
+
 		response.status(500).json({ error: "Failed to save event" });
 	}
 });
 
 function buildFeatures(events, sessions) {
-	// Get all session summaries and fallback to session_start events if no summaries
 	const sessionSummaries = sessions.filter(s => s.type === 'session_summary');
 	const sessionStarts = sessions.filter((s) => s.type === "session_start");
 	const sessionEnds = sessions.filter((s) => s.type === "session_end");
 	
-	console.log("Session summaries found:", sessionSummaries.length);
-	console.log("Session starts found:", sessionStarts.length);
-	console.log("Session ends found:", sessionEnds.length);
 
-	// Calculate clicks from both events and session summaries
-	const clicksFromEvents = (target) => events.filter((event) => event.type === "click" && event.target === target).length;
+
 	const clicksFromSessions = (target) => sessionSummaries.reduce((sum, session) => 
 		sum + (target === 'buy' ? (session.clicks_buy || 0) : (session.clicks_sell || 0)), 0);
 
-	// Calculate hovers from both events and session summaries  
-	const hoversFromEvents = (target) =>
-		events.filter((event) => event.type === "hover" && event.target === target).map((event) => event.hover_ms || 0);
 	const hoversFromSessions = (target) => 
 		sessionSummaries.flatMap(session => target === 'buy' ? (session.hovers_buy || []) : (session.hovers_sell || []));
 
-	const totalClicksBuy = clicksFromEvents("buy") + clicksFromSessions("buy");
-	const totalClicksSell = clicksFromEvents("sell") + clicksFromSessions("sell");
+	const totalClicksBuy = clicksFromSessions("buy");
+	const totalClicksSell = clicksFromSessions("sell");
 	
-	const allHoverBuy = [...hoversFromEvents("buy"), ...hoversFromSessions("buy")];
-	const allHoverSell = [...hoversFromEvents("sell"), ...hoversFromSessions("sell")];
+	const allHoverBuy = hoversFromSessions("buy");
+	const allHoverSell = hoversFromSessions("sell");
 
 	const average = (array) => (array.length ? array.reduce((sum, value) => sum + value, 0) / array.length : 0);
 	const percentile95 = (array) => {
@@ -351,22 +335,19 @@ function buildFeatures(events, sessions) {
 		return sorted[Math.floor(0.95 * (sorted.length - 1))];
 	};
 
-	// Session duration calculations
 	const completedSessions = sessionSummaries.filter(s => s.completed && s.duration_ms);
 	const avgSessionDuration = completedSessions.length > 0 ? 
 		average(completedSessions.map(s => s.duration_ms)) : 0;
 
-	// Activity time analysis
 	const timeOfDayHours = sessionStarts.map((s) => {
 		const hour = new Date(s.timestamp).getHours();
 		return hour;
 	});
 	const peakHour = timeOfDayHours.length > 0 ? getMostFrequent(timeOfDayHours) : null;
 
-	// Device and browser analysis from session summaries or session starts
 	const sourceSessions = sessionSummaries.length > 0 ? sessionSummaries : sessionStarts;
 	const userAgents = sourceSessions.map(s => s.user_agent).filter(Boolean);
-	console.log("User agents found:", userAgents.length);
+
 	
 	const deviceStats = userAgents.reduce((acc, ua) => {
 		const device = ua?.device || "unknown";
@@ -422,18 +403,16 @@ function getMostFrequent(arr) {
 
 app.get("/profile", authenticateToken, async (request, response) => {
 	try {
-		console.log("Fetching profile for user:", request.user.userId);
+
 		
 		const events = await eventsCollection.find({ user_id: new ObjectId(request.user.userId) }).toArray();
 		const allSessionEvents = await sessionsCollection.find({ user_id: new ObjectId(request.user.userId) }).toArray();
 		
-		console.log("Found events:", events.length);
-		console.log("Found session events:", allSessionEvents.length);
-		console.log("Session event types:", allSessionEvents.map(s => s.type));
+
 		
 		const features = buildFeatures(events, allSessionEvents);
 		
-		console.log("Generated features:", JSON.stringify(features, null, 2));
+
 
 		const systemPrompt = "You are a classifier. Respond with ONLY valid JSON. No explanations, no markdown, no prose.";
 		const groups = ["Cautious", "Balanced", "Opportunistic", "Impulsive", "Exploratory"];
@@ -465,19 +444,19 @@ Now output the classification:`.trim();
 			});
 
 			const data = await ollamaResponse.json();
-			console.log("Ollama response:", data.response);
+
 
 			let profile;
 			try {
 				profile = JSON.parse(data.response);
 			} catch (parseError) {
-				console.log("Direct parse failed, attempting to extract JSON:", parseError);
+
 				const jsonMatch = data.response.match(/\{[^}]*\}/);
 				if (jsonMatch) {
 					try {
 						profile = JSON.parse(jsonMatch[0]);
 					} catch (extractError) {
-						console.log("JSON extraction failed:", extractError);
+
 						profile = {
 							profile_type: "Balanced",
 							confidence: 0.5,
@@ -485,7 +464,7 @@ Now output the classification:`.trim();
 						};
 					}
 				} else {
-					console.log("No JSON found in response");
+
 					profile = {
 						profile_type: "Balanced",
 						confidence: 0.5,
@@ -494,7 +473,6 @@ Now output the classification:`.trim();
 				}
 			}
 
-			// Save profile to database
 			try {
 				await usersCollection.updateOne(
 					{ _id: new ObjectId(request.user.userId) },
@@ -506,12 +484,12 @@ Now output the classification:`.trim();
 					}
 				);
 			} catch (saveError) {
-				console.error("Failed to save profile:", saveError);
+
 			}
 
 			response.json({ features, profile });
 		} catch (error) {
-			console.error("Profile generation error:", error);
+
 			response.json({
 				features,
 				profile: {
@@ -522,7 +500,7 @@ Now output the classification:`.trim();
 			});
 		}
 	} catch (error) {
-		console.error("Failed to build profile:", error);
+
 		response.status(500).json({ error: "Failed to build profile" });
 	}
 });
@@ -578,7 +556,7 @@ app.delete("/reset", authenticateToken, async (request, response) => {
 		await sessionsCollection.deleteMany({ user_id: new ObjectId(request.user.userId) });
 		response.status(200).json({ message: "Your data cleared successfully." });
 	} catch (error) {
-		console.error("Failed to clear user data:", error);
+
 		response.status(500).json({ error: "Failed to clear data" });
 	}
 });
@@ -591,6 +569,5 @@ app.get("/price", (_req, res) => {
 
 connectToDatabase().then(() => {
 	generateInitialPrices();
-	console.log(`Generated ${priceHistory.length} initial price points`);
-	app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+	app.listen(PORT);
 });
