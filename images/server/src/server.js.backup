@@ -1,18 +1,31 @@
 import express from "express";
 import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
-import { hashPassword, comparePassword, generateToken, verifyToken } from "./auth.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
-const JWT_SECRET = process.env.JWT_SECRET;
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://localhost:8081'],
+  credentials: true
+}));
 
-const PORT = process.env.PORT || 3000;
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP"
+});
+app.use(limiter);
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const PORT = process.env.PORT || 3001;
 const OLLAMA_URL = process.env.OLLAMA_URL || "http://localhost:11434";
 const MONGODB_URL = process.env.MONGODB_URL || "mongodb://localhost:27017/brokerdb";
 const MODEL = "llama3.2:1b";
@@ -54,113 +67,107 @@ function authenticateToken(req, res, next) {
   });
 }
 
-app.post("/api/auth/register", async (req, res) => {
-	const { username, email, password } = req.body;
-
-	if (!username || !email || !password) {
-		return res.status(400).json({ error: "Username, email, and password required" });
-	}
-
-	if (password.length < 6) {
-		return res.status(400).json({ error: "Password must be at least 6 characters" });
-	}
-
-	try {
-		const existingUser = await usersCollection.findOne({
-			$or: [{ email }, { username }],
-		});
-
-		if (existingUser) {
-			return res.status(400).json({ error: "User already exists" });
-		}
-
-		const hashedPassword = await hashPassword(password);
-		const result = await usersCollection.insertOne({
-			username,
-			email,
-			password: hashedPassword,
-			createdAt: new Date(),
-		});
-
-		const token = generateToken(result.insertedId);
-
-		res.status(201).json({
-			message: "User created successfully",
-			token,
-			user: {
-				id: result.insertedId,
-				username,
-				email,
-			},
-		});
-	} catch (error) {
-		console.error("Registration error:", error);
-		res.status(500).json({ error: "Failed to create user" });
-	}
-});
-
-app.post("/api/auth/login", async (req, res) => {
-	const { email, password } = req.body;
-
-	if (!email || !password) {
-		return res.status(400).json({ error: "Email and password required" });
-	}
-
-	try {
-		const user = await usersCollection.findOne({ email });
-
-		if (!user) {
-			return res.status(401).json({ error: "Invalid credentials" });
-		}
-
-		const isValidPassword = await comparePassword(password, user.password);
-
-		if (!isValidPassword) {
-			return res.status(401).json({ error: "Invalid credentials" });
-		}
-
-		const token = generateToken(user._id);
-
-		res.json({
-			message: "Login successful",
-			token,
-			user: {
-				id: user._id,
-				username: user.username,
-				email: user.email,
-			},
-		});
-	} catch (error) {
-		console.error("Login error:", error);
-		res.status(500).json({ error: "Failed to login" });
-	}
-});
-
-app.get("/api/auth/profile", authenticateToken, async (req, res) => {
-	try {
-		const user = await usersCollection.findOne({ _id: new ObjectId(req.user.userId) });
-
-		if (!user) {
-			return res.status(404).json({ error: "User not found" });
-		}
-
-		res.json({
-			user: {
-				id: user._id,
-				username: user.username,
-				email: user.email,
-				createdAt: user.createdAt,
-				profile: user.profile,
-				profileUpdatedAt: user.profile_updated_at,
-			},
-		});
-	} catch (error) {
-		console.error("Profile error:", error);
-		res.status(500).json({ error: "Failed to fetch profile" });
-	}
-});
-
 app.get("/", (_request, response) => response.status(200).send("OK"));
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const { email, password, username } = req.body;
+
+    if (!email || !password || !username) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
+
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const newUser = {
+      email,
+      username,
+      password: hashedPassword,
+      createdAt: new Date(),
+      isActive: true
+    };
+
+    const result = await usersCollection.insertOne(newUser);
+    
+    const token = jwt.sign(
+      { userId: result.insertedId, email, username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      message: "User created successfully",
+      token,
+      user: { id: result.insertedId, email, username }
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: { id: user._id, email: user.email, username: user.username }
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+app.get("/api/me", authenticateToken, async (req, res) => {
+  try {
+  const user = await usersCollection.findOne(
+    { _id: new ObjectId(req.user.userId) },
+    { projection: { password: 0 } }
+  );
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Failed to get user data" });
+  }
+});
 
 app.post("/event", authenticateToken, async (request, response) => {
 	const event = request.body;
@@ -348,60 +355,58 @@ Now output the classification:`.trim();
 		response.status(500).json({ error: "Failed to build profile" });
 	}
 });
+			} catch {
+				profile = {
+					profile_type: "Balanced",
+					confidence: 0.5,
+					signals: ["fallback parse"],
+				};
+			}
 
-let lastPrice = 100;
-let priceHistory = [];
+			response.json({ features, profile });
+		} catch (error) {
+			console.error("Profile generation error:", error);
+			response.json({
+				features,
+				profile: {
+					profile_type: "Balanced",
+					confidence: 0.5,
+					signals: ["ollama error"],
+				},
+			});
+		}
+	} catch (error) {
+		console.error("Failed to build profile:", error);
+		response.status(500).json({ error: "Failed to build profile" });
+	}
+});
 
-function generateInitialPrices() {
-	const initialPrice = 100;
-	lastPrice = initialPrice;
-	priceHistory = [
-		{
-			price: initialPrice,
-			timestamp: new Date(Date.now() - 19 * 30000).toISOString(),
-		},
-	];
-
-	for (let i = 1; i < 20; i++) {
-		const maxChangePercent = 0.05;
-		const change = (Math.random() - 0.5) * 2 * maxChangePercent;
-		const newPrice = lastPrice * (1 + change);
-		lastPrice = Number(newPrice.toFixed(2));
-
-		priceHistory.push({
-			price: lastPrice,
-			timestamp: new Date(Date.now() - (19 - i) * 30000).toISOString(),
+app.post("/api/chat", authenticateToken, async (request, response) => {
+	try {
+		const prompt = request.body.prompt ?? "";
+		const ollamaResponse = await fetch(`${OLLAMA_URL}/api/generate`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ model: MODEL, prompt, stream: false }),
 		});
+
+		const data = await ollamaResponse.json();
+		response.send(data.response || "No response generated");
+	} catch {
+		response.status(500).json({ error: "Failed to connect to Ollama" });
 	}
-}
+});
 
-function randomPrice() {
-	const maxChangePercent = 0.05;
-	const change = (Math.random() - 0.5) * 2 * maxChangePercent;
-	const newPrice = lastPrice * (1 + change);
-	lastPrice = Number(newPrice.toFixed(2));
-
-	const newPricePoint = {
-		price: lastPrice,
-		timestamp: new Date().toISOString(),
-	};
-
-	priceHistory.push(newPricePoint);
-	if (priceHistory.length > 50) {
-		priceHistory = priceHistory.slice(-50);
+app.delete("/reset", authenticateToken, async (_request, response) => {
+	try {
+		await eventsCollection.deleteMany({});
+		response.status(200).json({ message: "Database cleared." });
+	} catch (error) {
+		console.error("Failed to clear database:", error);
+		response.status(500).json({ error: "Failed to clear database" });
 	}
-
-	return lastPrice;
-}
-
-app.get("/price", (_req, res) => {
-	const price = randomPrice();
-	const timestamp = new Date().toISOString();
-	res.json({ price, timestamp, history: priceHistory });
 });
 
 connectToDatabase().then(() => {
-	generateInitialPrices();
-	console.log(`Generated ${priceHistory.length} initial price points`);
 	app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 });
