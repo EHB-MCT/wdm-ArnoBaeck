@@ -6,16 +6,16 @@ export default function Button({ label, onClick, disabled = false }) {
 			onClick={onClick} 
 			disabled={disabled}
 			style={{
-				backgroundColor: '#3498db',
-				color: 'white',
+				backgroundColor: '#3b82f6',
+				color: '#ffffff',
 				border: 'none',
 				padding: '0.75rem 1.5rem',
-				borderRadius: '4px',
+				borderRadius: '6px',
 				cursor: disabled ? 'not-allowed' : 'pointer',
-				fontSize: '1rem',
+				fontSize: '0.9rem',
 				fontWeight: '500',
-				transition: 'background-color 0.3s ease',
-				opacity: disabled ? 0.6 : 1,
+				transition: 'background-color 0.2s ease',
+				opacity: disabled ? 0.5 : 1,
 				margin: '0.5rem'
 			}}
 		>

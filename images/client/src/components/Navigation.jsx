@@ -40,9 +40,10 @@ export default function Navigation() {
 
 const styles = {
 	nav: {
-		backgroundColor: '#2c3e50',
+		backgroundColor: '#ffffff',
 		padding: '1rem 2rem',
-		boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+		boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+		borderBottom: '1px solid #e5e7eb',
 	},
 	ul: {
 		listStyle: 'none',
@@ -50,34 +51,30 @@ const styles = {
 		padding: 0,
 		display: 'flex',
 		alignItems: 'center',
-		gap: '2rem',
+		gap: '1rem',
 	},
 	li: {
 		margin: 0,
 	},
 	link: {
-		color: '#ecf0f1',
+		color: '#374151',
 		textDecoration: 'none',
 		fontWeight: '500',
 		padding: '0.5rem 1rem',
-		borderRadius: '4px',
-		transition: 'background-color 0.3s ease',
-		'&:hover': {
-			backgroundColor: '#34495e',
-		},
+		borderRadius: '6px',
+		transition: 'background-color 0.2s ease',
+		fontSize: '0.9rem',
 	},
 	logoutButton: {
-		backgroundColor: '#e74c3c',
-		color: '#white',
+		backgroundColor: '#dc2626',
+		color: '#ffffff',
 		border: 'none',
 		padding: '0.5rem 1rem',
-		borderRadius: '4px',
+		borderRadius: '6px',
 		cursor: 'pointer',
 		fontWeight: '500',
-		transition: 'background-color 0.3s ease',
+		transition: 'background-color 0.2s ease',
 		marginLeft: 'auto',
-		'&:hover': {
-			backgroundColor: '#c0392b',
-		},
+		fontSize: '0.9rem',
 	},
 };

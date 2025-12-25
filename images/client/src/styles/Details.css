@@ -1,7 +1,8 @@
 .page {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .page__header {
@@ -9,9 +10,10 @@
 }
 
 .title {
-  font-size: 2.5rem;
-  color: #2c3e50;
+  font-size: 2rem;
+  color: #1f2937;
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .controls {
@@ -26,8 +28,8 @@
 
 .info {
   margin-top: 1rem;
-  font-size: 1.1rem;
-  color: #7f8c8d;
+  font-size: 1rem;
+  color: #6b7280;
 }
 
 .result {
@@ -38,41 +40,45 @@
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
 }
 
 .card__title {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #2c3e50;
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .code {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 4px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   padding: 1rem;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 0.875rem;
   overflow-x: auto;
   white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 .alert {
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: 6px;
   margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
 .alert--error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 .alert--ok {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
 }
