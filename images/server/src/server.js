@@ -160,6 +160,23 @@ app.get("/api/auth/profile", authenticateToken, async (req, res) => {
 	}
 });
 
+app.post("/session-event", authenticateToken, async (request, response) => {
+	const sessionEvent = request.body;
+	if (!sessionEvent?.type) {
+		return response.status(400).json({ error: "Session event type required" });
+	}
+
+	try {
+		sessionEvent.user_id = new ObjectId(request.user.userId);
+		sessionEvent.timestamp = new Date(sessionEvent.timestamp || Date.now());
+		await sessionsCollection.insertOne(sessionEvent);
+		response.status(201).json({ message: "Session event saved successfully" });
+	} catch (error) {
+		console.error("Failed to save session event:", error);
+		response.status(500).json({ error: "Failed to save session event" });
+	}
+});
+
 app.get("/", (_request, response) => response.status(200).send("OK"));
 
 app.post("/event", authenticateToken, async (request, response) => {
@@ -393,6 +410,17 @@ function randomPrice() {
 
 	return lastPrice;
 }
+
+app.delete("/reset", authenticateToken, async (request, response) => {
+	try {
+		await eventsCollection.deleteMany({ user_id: new ObjectId(request.user.userId) });
+		await sessionsCollection.deleteMany({ user_id: new ObjectId(request.user.userId) });
+		response.status(200).json({ message: "Your data cleared successfully." });
+	} catch (error) {
+		console.error("Failed to clear user data:", error);
+		response.status(500).json({ error: "Failed to clear data" });
+	}
+});
 
 app.get("/price", (_req, res) => {
 	const price = randomPrice();

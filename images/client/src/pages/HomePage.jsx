@@ -1,12 +1,18 @@
 import { useState } from "react";
 import Button from "../components/Button";
 import Navigation from "../components/Navigation";
+import { useSessionTracking } from "../hooks/useSessionTracking";
+import { useAuth } from "../contexts/AuthContext";
 import "../styles/Details.css";
 
 export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
   const [result, setResult] = useState(null);
+  const { user } = useAuth();
+  
+  // Track session when user is logged in
+  useSessionTracking(user?.id);
 
   async function handleProfile() {
     const token = localStorage.getItem("token");
