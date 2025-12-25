@@ -659,6 +659,37 @@ app.get("/api/admin/user/:userId/data", authenticateAdmin, async (req, res) => {
   }
 });
 
+app.get("/api/user/data", authenticateToken, async (req, res) => {
+  try {
+    const { filter = 'all' } = req.query;
+    
+    const events = await eventsCollection.find({ user_id: new ObjectId(req.user.userId) }).toArray();
+    const allSessionEvents = await sessionsCollection.find({ user_id: new ObjectId(req.user.userId) }).toArray();
+    
+    let filteredEvents = events;
+    let filteredSessions = allSessionEvents;
+    
+    if (filter !== 'all') {
+      filteredEvents = events.filter(event => event.session_id === filter);
+      filteredSessions = allSessionEvents.filter(session => session.session_id === filter);
+    }
+    
+    const features = buildFeatures(filteredEvents, filteredSessions);
+    
+    res.json({
+      user_id: req.user.userId,
+      filter: filter,
+      events: filteredEvents,
+      sessions: filteredSessions,
+      features: features,
+      total_events: events.length,
+      total_sessions: allSessionEvents.filter(s => s.type === 'session_start').length
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user data" });
+  }
+});
+
 app.get("/price", (_req, res) => {
 	const price = randomPrice();
 	const timestamp = new Date().toISOString();
