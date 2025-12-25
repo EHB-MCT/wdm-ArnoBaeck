@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   const axiosInstance = axios.create({
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:3000',
     headers: {
       'Content-Type': 'application/json',
     },

@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -151,10 +151,10 @@ app.post("/api/login", async (req, res) => {
 
 app.get("/api/me", authenticateToken, async (req, res) => {
   try {
-    const user = await usersCollection.findOne(
-      { _id: req.user.userId },
-      { projection: { password: 0 } }
-    );
+  const user = await usersCollection.findOne(
+    { _id: new ObjectId(req.user.userId) },
+    { projection: { password: 0 } }
+  );
     
     if (!user) {
       return res.status(404).json({ error: "User not found" });
