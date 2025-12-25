@@ -26,10 +26,8 @@ function Button({ label = "Unknown", onClick }) {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       }
-    }).then(response => {
-
     }).catch((error) => {
-
+      console.warn('Event send failed:', error.message);
     });
   }
 

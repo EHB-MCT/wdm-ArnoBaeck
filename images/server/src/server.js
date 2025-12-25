@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { MongoClient, ObjectId } from "mongodb";
 import { hashPassword, comparePassword, generateToken, verifyToken } from "./auth.js";
 import jwt from "jsonwebtoken";
@@ -8,8 +9,16 @@ import dotenv from "dotenv";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
+if (!JWT_SECRET) {
+	throw new Error('JWT_SECRET environment variable is required');
+}
+
 const app = express();
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+	origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+	credentials: true
+}));
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -32,7 +41,7 @@ async function connectToDatabase() {
 		sessionsCollection = db.collection("sessions");
 
 	} catch (error) {
-
+		console.error('Database connection failed:', error);
 		process.exit(1);
 	}
 }
@@ -94,7 +103,7 @@ app.post("/api/auth/register", async (req, res) => {
 			},
 		});
 	} catch (error) {
-
+		console.error('User creation failed:', error);
 		res.status(500).json({ error: "Failed to create user" });
 	}
 });
@@ -131,7 +140,7 @@ app.post("/api/auth/login", async (req, res) => {
 			},
 		});
 	} catch (error) {
-
+		console.error('Login failed:', error);
 		res.status(500).json({ error: "Failed to login" });
 	}
 });
@@ -155,7 +164,7 @@ app.get("/api/auth/profile", authenticateToken, async (req, res) => {
 			},
 		});
 	} catch (error) {
-
+		console.error('Profile fetch failed:', error);
 		res.status(500).json({ error: "Failed to fetch profile" });
 	}
 });
@@ -223,7 +232,7 @@ app.post("/session-event", authenticateToken, async (request, response) => {
 
 		response.status(201).json({ message: "Session event saved successfully" });
 	} catch (error) {
-
+		console.error('Session event save failed:', error);
 		response.status(500).json({ error: "Failed to save session event" });
 	}
 });
@@ -237,7 +246,7 @@ app.get("/api/sessions", authenticateToken, async (request, response) => {
 		
 		response.json(sessions);
 	} catch (error) {
-
+		console.error('Sessions fetch failed:', error);
 		response.status(500).json({ error: "Failed to fetch sessions" });
 	}
 });
@@ -252,7 +261,7 @@ app.get("/api/sessions/:sessionId/events", authenticateToken, async (request, re
 		
 		response.json(events);
 	} catch (error) {
-
+		console.error('Session events fetch failed:', error);
 		response.status(500).json({ error: "Failed to fetch session events" });
 	}
 });
@@ -304,7 +313,7 @@ app.post("/event", authenticateToken, async (request, response) => {
 
 		response.status(201).json({ message: "Event saved successfully" });
 	} catch (error) {
-
+		console.error('Event save failed:', error);
 		response.status(500).json({ error: "Failed to save event" });
 	}
 });
@@ -484,12 +493,12 @@ Now output the classification:`.trim();
 					}
 				);
 			} catch (saveError) {
-
+				console.warn('Profile save failed:', saveError.message);
 			}
 
 			response.json({ features, profile });
 		} catch (error) {
-
+			console.warn('Ollama profiling failed:', error.message);
 			response.json({
 				features,
 				profile: {
@@ -500,7 +509,7 @@ Now output the classification:`.trim();
 			});
 		}
 	} catch (error) {
-
+		console.error('Profile build failed:', error);
 		response.status(500).json({ error: "Failed to build profile" });
 	}
 });
@@ -556,7 +565,7 @@ app.delete("/reset", authenticateToken, async (request, response) => {
 		await sessionsCollection.deleteMany({ user_id: new ObjectId(request.user.userId) });
 		response.status(200).json({ message: "Your data cleared successfully." });
 	} catch (error) {
-
+		console.error('Data clear failed:', error);
 		response.status(500).json({ error: "Failed to clear data" });
 	}
 });
@@ -623,6 +632,7 @@ app.get("/api/admin/search-users", authenticateAdmin, async (req, res) => {
     
     res.json({ users: usersWithAdminFlag });
   } catch (error) {
+    console.error('User search failed:', error);
     res.status(500).json({ error: "Failed to search users" });
   }
 });
@@ -655,6 +665,7 @@ app.get("/api/admin/user/:userId/data", authenticateAdmin, async (req, res) => {
       total_sessions: allSessionEvents.filter(s => s.type === 'session_start').length
     });
   } catch (error) {
+    console.error('Admin user data fetch failed:', error);
     res.status(500).json({ error: "Failed to fetch user data" });
   }
 });
@@ -686,6 +697,7 @@ app.get("/api/user/data", authenticateToken, async (req, res) => {
       total_sessions: allSessionEvents.filter(s => s.type === 'session_start').length
     });
   } catch (error) {
+    console.error('User data fetch failed:', error);
     res.status(500).json({ error: "Failed to fetch user data" });
   }
 });

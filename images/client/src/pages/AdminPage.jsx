@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Navigation from '../components/Navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Button from '../components/Button';
 // import {
 //   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -436,7 +436,7 @@ export default function AdminPage() {
 											<div style={{ display: 'grid', gap: '0.5rem' }}>
 												{userData.sessions
 													.filter(s => s.type === 'session_summary' && s.duration_ms)
-													.map((s, index) => (
+													.map((s) => (
 														<div key={s.session_id} style={{ 
 															border: '1px solid #e5e7eb', 
 															borderRadius: '4px', 

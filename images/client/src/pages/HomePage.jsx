@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Button from "../components/Button";
 import Navigation from "../components/Navigation";
 import { useSessionTracking } from "../hooks/useSessionTracking";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { generatePricePoints } from "../utils/priceGenerator";
 
 import "../styles/Details.css";

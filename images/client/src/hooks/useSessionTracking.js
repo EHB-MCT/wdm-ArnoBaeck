@@ -1,21 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import axios from 'axios';
 
 export const useSessionTracking = (userId) => {
   const sessionStartTime = useRef(Date.now());
   const sessionActive = useRef(true);
-  const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
     if (!userId) return;
 
     const newSessionId = `session_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    setSessionId(newSessionId);
     localStorage.setItem('currentSessionId', newSessionId);
     const sendSessionStart = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.post('http://localhost:3000/session-event', {
+        await axios.post('http://localhost:3000/session-event', {
           type: 'session_start',
           session_id: newSessionId,
           user_agent: {
@@ -32,7 +30,7 @@ export const useSessionTracking = (userId) => {
         });
 
       } catch (error) {
-
+        console.warn('Session start failed:', error.message);
       }
     };
 
@@ -60,7 +58,7 @@ export const useSessionTracking = (userId) => {
         });
 
       } catch (error) {
-
+        console.warn('Session end failed:', error.message);
       }
     };
 

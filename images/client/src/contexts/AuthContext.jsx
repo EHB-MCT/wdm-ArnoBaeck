@@ -1,53 +1,50 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export { AuthContext };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  const axiosInstance = axios.create({
-    baseURL: 'http://localhost:3000',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const axiosInstance = useMemo(() => {
+    const instance = axios.create({
+      baseURL: 'http://localhost:3000',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  // Set initial token if it exists
-  if (token) {
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
+    // Set initial token if it exists
+    if (token) {
+      instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+
+    return instance;
+  }, [token]);
 
   useEffect(() => {
     if (token) {
-      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, fetchUser]);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/api/auth/profile');
       setUser(response.data.user);
     } catch (error) {
-
+      console.warn('User fetch failed:', error.message);
       logout();
     } finally {
       setLoading(false);
     }
-  };
+  }, [axiosInstance, logout]);
 
   const login = async (email, password) => {
     try {
@@ -83,12 +80,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
     delete axiosInstance.defaults.headers.common['Authorization'];
-  };
+  }, [axiosInstance]);
 
   const isAdmin = () => {
     if (!user) return false;

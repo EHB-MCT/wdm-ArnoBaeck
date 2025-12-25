@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navigation from '../components/Navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Button from '../components/Button';
 
 import "../styles/Details.css";
@@ -13,7 +13,7 @@ export default function DashboardPage() {
 	const [sessionFilter, setSessionFilter] = useState('all');
 	const [error, setError] = useState(null);
 
-	const fetchUserData = async (filter = 'all') => {
+	const fetchUserData = useCallback(async (filter = 'all') => {
 		setUserDataLoading(true);
 		setError(null);
 		
@@ -25,7 +25,7 @@ export default function DashboardPage() {
 		} finally {
 			setUserDataLoading(false);
 		}
-	};
+	}, [axiosInstance]);
 
 	const handleSessionFilterChange = (newFilter) => {
 		setSessionFilter(newFilter);
@@ -36,7 +36,7 @@ export default function DashboardPage() {
 		if (user) {
 			fetchUserData('all');
 		}
-	}, [user]);
+	}, [user, fetchUserData]);
 
 	return (
 		<div>
@@ -218,7 +218,7 @@ export default function DashboardPage() {
 									<div style={{ display: 'grid', gap: '0.5rem' }}>
 										{userData.sessions
 											.filter(s => s.type === 'session_summary' && s.duration_ms)
-											.map((s, index) => (
+											.map((s) => (
 												<div key={s.session_id} style={{ 
 													border: '1px solid #e5e7eb', 
 													borderRadius: '4px', 
