@@ -167,13 +167,98 @@ app.post("/session-event", authenticateToken, async (request, response) => {
 	}
 
 	try {
-		sessionEvent.user_id = new ObjectId(request.user.userId);
+		const userId = new ObjectId(request.user.userId);
+		sessionEvent.user_id = userId;
 		sessionEvent.timestamp = new Date(sessionEvent.timestamp || Date.now());
+
+		// Insert session event
 		await sessionsCollection.insertOne(sessionEvent);
+
+		// For session_start, also create/update session summary
+		if (sessionEvent.type === 'session_start' && sessionEvent.session_id) {
+			console.log("Creating session summary for:", sessionEvent.session_id);
+			
+			const result = await sessionsCollection.updateOne(
+				{ 
+					user_id: userId, 
+					session_id: sessionEvent.session_id,
+					type: 'session_summary' 
+				},
+				{
+					$set: {
+						user_id: userId,
+						session_id: sessionEvent.session_id,
+						type: 'session_summary',
+						start_time: sessionEvent.timestamp,
+						user_agent: sessionEvent.user_agent,
+						start_timestamp: sessionEvent.timestamp,
+						last_activity: sessionEvent.timestamp,
+						events_count: 0,
+						clicks_buy: 0,
+						clicks_sell: 0,
+						hovers_buy: [],
+						hovers_sell: []
+					}
+				},
+				{ upsert: true }
+			);
+			
+			console.log("Session summary update result:", result);
+		}
+
+		// For session_end, update session summary
+		if (sessionEvent.type === 'session_end' && sessionEvent.session_id) {
+			await sessionsCollection.updateOne(
+				{ 
+					user_id: userId, 
+					session_id: sessionEvent.session_id,
+					type: 'session_summary' 
+				},
+				{
+					$set: {
+						end_time: sessionEvent.timestamp,
+						duration_ms: sessionEvent.total_session_duration,
+						completed: true
+					}
+				}
+			);
+		}
+
 		response.status(201).json({ message: "Session event saved successfully" });
 	} catch (error) {
 		console.error("Failed to save session event:", error);
 		response.status(500).json({ error: "Failed to save session event" });
+	}
+});
+
+// Get all session summaries for a user
+app.get("/api/sessions", authenticateToken, async (request, response) => {
+	try {
+		const sessions = await sessionsCollection.find({ 
+			user_id: new ObjectId(request.user.userId),
+			type: 'session_summary'
+		}).sort({ start_time: -1 }).toArray();
+		
+		response.json(sessions);
+	} catch (error) {
+		console.error("Failed to fetch sessions:", error);
+		response.status(500).json({ error: "Failed to fetch sessions" });
+	}
+});
+
+// Get events for a specific session
+app.get("/api/sessions/:sessionId/events", authenticateToken, async (request, response) => {
+	try {
+		const { sessionId } = request.params;
+		const events = await eventsCollection.find({ 
+			user_id: new ObjectId(request.user.userId),
+			session_id: sessionId 
+		}).sort({ timestamp: 1 }).toArray();
+		
+		response.json(events);
+	} catch (error) {
+		console.error("Failed to fetch session events:", error);
+		response.status(500).json({ error: "Failed to fetch session events" });
 	}
 });
 
@@ -186,9 +271,45 @@ app.post("/event", authenticateToken, async (request, response) => {
 	}
 
 	try {
-		event.user_id = new ObjectId(request.user.userId);
+		const userId = new ObjectId(request.user.userId);
+		event.user_id = userId;
 		event.timestamp = new Date();
+		
+		// Insert the event
 		await eventsCollection.insertOne(event);
+
+		// Update session summary with event data
+		if (event.session_id && event.session_id !== "unknown-session") {
+			const updateData = {
+				$set: { last_activity: new Date() },
+				$inc: { events_count: 1 }
+			};
+
+			// Update specific counters based on event type and target
+			if (event.type === 'click') {
+				if (event.target === 'buy') {
+					updateData.$inc.clicks_buy = 1;
+				} else if (event.target === 'sell') {
+					updateData.$inc.clicks_sell = 1;
+				}
+			} else if (event.type === 'hover' && event.hover_ms) {
+				if (event.target === 'buy') {
+					updateData.$push = { hovers_buy: event.hover_ms };
+				} else if (event.target === 'sell') {
+					updateData.$push = { hovers_sell: event.hover_ms };
+				}
+			}
+
+			await sessionsCollection.updateOne(
+				{ 
+					user_id: userId, 
+					session_id: event.session_id,
+					type: 'session_summary' 
+				},
+				updateData
+			);
+		}
+
 		response.status(201).json({ message: "Event saved successfully" });
 	} catch (error) {
 		console.error("Failed to save event:", error);
@@ -197,9 +318,32 @@ app.post("/event", authenticateToken, async (request, response) => {
 });
 
 function buildFeatures(events, sessions) {
-	const clicks = (target) => events.filter((event) => event.type === "click" && event.target === target).length;
-	const hovers = (target) =>
+	// Get all session summaries and fallback to session_start events if no summaries
+	const sessionSummaries = sessions.filter(s => s.type === 'session_summary');
+	const sessionStarts = sessions.filter((s) => s.type === "session_start");
+	const sessionEnds = sessions.filter((s) => s.type === "session_end");
+	
+	console.log("Session summaries found:", sessionSummaries.length);
+	console.log("Session starts found:", sessionStarts.length);
+	console.log("Session ends found:", sessionEnds.length);
+
+	// Calculate clicks from both events and session summaries
+	const clicksFromEvents = (target) => events.filter((event) => event.type === "click" && event.target === target).length;
+	const clicksFromSessions = (target) => sessionSummaries.reduce((sum, session) => 
+		sum + (target === 'buy' ? (session.clicks_buy || 0) : (session.clicks_sell || 0)), 0);
+
+	// Calculate hovers from both events and session summaries  
+	const hoversFromEvents = (target) =>
 		events.filter((event) => event.type === "hover" && event.target === target).map((event) => event.hover_ms || 0);
+	const hoversFromSessions = (target) => 
+		sessionSummaries.flatMap(session => target === 'buy' ? (session.hovers_buy || []) : (session.hovers_sell || []));
+
+	const totalClicksBuy = clicksFromEvents("buy") + clicksFromSessions("buy");
+	const totalClicksSell = clicksFromEvents("sell") + clicksFromSessions("sell");
+	
+	const allHoverBuy = [...hoversFromEvents("buy"), ...hoversFromSessions("buy")];
+	const allHoverSell = [...hoversFromEvents("sell"), ...hoversFromSessions("sell")];
+
 	const average = (array) => (array.length ? array.reduce((sum, value) => sum + value, 0) / array.length : 0);
 	const percentile95 = (array) => {
 		if (!array.length) return 0;
@@ -207,40 +351,42 @@ function buildFeatures(events, sessions) {
 		return sorted[Math.floor(0.95 * (sorted.length - 1))];
 	};
 
-	const hoverStatsBuy = hovers("buy");
-	const hoverStatsSell = hovers("sell");
+	// Session duration calculations
+	const completedSessions = sessionSummaries.filter(s => s.completed && s.duration_ms);
+	const avgSessionDuration = completedSessions.length > 0 ? 
+		average(completedSessions.map(s => s.duration_ms)) : 0;
 
-	const sessionStarts = sessions.filter((s) => s.type === "session_start");
-	const sessionEnds = sessions.filter((s) => s.type === "session_end");
-	const avgSessionDuration = sessionEnds.length > 0 ? average(sessionEnds.map((s) => s.total_session_duration || 0)) : 0;
-
+	// Activity time analysis
 	const timeOfDayHours = sessionStarts.map((s) => {
 		const hour = new Date(s.timestamp).getHours();
 		return hour;
 	});
-
 	const peakHour = timeOfDayHours.length > 0 ? getMostFrequent(timeOfDayHours) : null;
 
-	const userAgents = sessionStarts.map((s) => s.user_agent).filter(Boolean);
+	// Device and browser analysis from session summaries or session starts
+	const sourceSessions = sessionSummaries.length > 0 ? sessionSummaries : sessionStarts;
+	const userAgents = sourceSessions.map(s => s.user_agent).filter(Boolean);
+	console.log("User agents found:", userAgents.length);
+	
 	const deviceStats = userAgents.reduce((acc, ua) => {
-		const device = ua.device || "unknown";
+		const device = ua?.device || "unknown";
 		acc[device] = (acc[device] || 0) + 1;
 		return acc;
 	}, {});
 
 	const browserStats = userAgents.reduce((acc, ua) => {
-		const browser = ua.browser?.browser || "unknown";
+		const browser = ua?.browser?.browser || ua?.full_ua?.split(' ')[0] || "unknown";
 		acc[browser] = (acc[browser] || 0) + 1;
 		return acc;
 	}, {});
 
 	return {
-		number_of_clicks_buy: clicks("buy"),
-		number_of_clicks_sell: clicks("sell"),
-		average_hover_buy_duration: Math.round(average(hoverStatsBuy)),
-		average_hover_sell_duration: Math.round(average(hoverStatsSell)),
-		percentile95_hover_buy_duration: Math.round(percentile95(hoverStatsBuy)),
-		percentile95_hover_sell_duration: Math.round(percentile95(hoverStatsSell)),
+		number_of_clicks_buy: totalClicksBuy,
+		number_of_clicks_sell: totalClicksSell,
+		average_hover_buy_duration: Math.round(average(allHoverBuy)),
+		average_hover_sell_duration: Math.round(average(allHoverSell)),
+		percentile95_hover_buy_duration: Math.round(percentile95(allHoverBuy)),
+		percentile95_hover_sell_duration: Math.round(percentile95(allHoverSell)),
 		average_session_duration_ms: Math.round(avgSessionDuration),
 		peak_activity_hour: peakHour,
 		total_sessions: sessionStarts.length,
@@ -256,6 +402,12 @@ function buildFeatures(events, sessions) {
 		),
 		device_distribution: deviceStats,
 		browser_distribution: browserStats,
+		session_data: {
+			total_sessions: sessionStarts.length,
+			completed_sessions: completedSessions.length,
+			session_summaries_count: sessionSummaries.length,
+			unique_session_ids: sessionStarts.map(s => s.session_id).filter(Boolean)
+		}
 	};
 }
 
@@ -270,9 +422,18 @@ function getMostFrequent(arr) {
 
 app.get("/profile", authenticateToken, async (request, response) => {
 	try {
+		console.log("Fetching profile for user:", request.user.userId);
+		
 		const events = await eventsCollection.find({ user_id: new ObjectId(request.user.userId) }).toArray();
-		const sessions = await sessionsCollection.find({ user_id: new ObjectId(request.user.userId) }).toArray();
-		const features = buildFeatures(events, sessions);
+		const allSessionEvents = await sessionsCollection.find({ user_id: new ObjectId(request.user.userId) }).toArray();
+		
+		console.log("Found events:", events.length);
+		console.log("Found session events:", allSessionEvents.length);
+		console.log("Session event types:", allSessionEvents.map(s => s.type));
+		
+		const features = buildFeatures(events, allSessionEvents);
+		
+		console.log("Generated features:", JSON.stringify(features, null, 2));
 
 		const systemPrompt = "You are a classifier. Respond with ONLY valid JSON. No explanations, no markdown, no prose.";
 		const groups = ["Cautious", "Balanced", "Opportunistic", "Impulsive", "Exploratory"];

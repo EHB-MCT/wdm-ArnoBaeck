@@ -15,9 +15,10 @@ function Button({ label = "Unknown", onClick }) {
     }
     
     // Add session_id to event for server validation
+    const currentSessionId = localStorage.getItem('currentSessionId') || "unknown-session";
     const eventWithSession = {
       ...event,
-      session_id: "user-session"
+      session_id: currentSessionId
     };
     
     console.log("Sending event with session:", eventWithSession);
