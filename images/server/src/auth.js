@@ -1,7 +1,11 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_super_secret_key_here";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+	throw new Error('JWT_SECRET environment variable is required in auth module');
+}
 
 export async function hashPassword(password) {
   const saltRounds = 10;

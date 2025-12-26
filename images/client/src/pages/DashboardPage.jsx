@@ -5,6 +5,7 @@ import Button from '../components/Button';
 
 import "../styles/Details.css";
 import "../styles/Chart.css";
+import "../styles/Dashboard.css";
 
 export default function DashboardPage() {
 	const { axiosInstance, user } = useAuth();
@@ -54,22 +55,17 @@ export default function DashboardPage() {
 					<div className="card">
 						<h2 className="card__title">
 							Your Activity Data
-							<span style={{ marginLeft: '1rem', fontSize: '0.9rem', color: '#6b7280' }}>
+							<span className="dashboard__data-count">
 								({userData.events.length} events, {userData.sessions.filter(s => s.type === 'session_summary').length} sessions)
 							</span>
 						</h2>
 						
-						<div style={{ marginBottom: '1rem' }}>
-							<label style={{ marginRight: '0.5rem' }}>Filter by session:</label>
+						<div className="dashboard__session-filter">
+							<label htmlFor="session-filter">Filter by session:</label>
 							<select 
+								id="session-filter"
 								value={sessionFilter} 
 								onChange={(e) => handleSessionFilterChange(e.target.value)}
-								style={{
-									padding: '0.25rem 0.5rem',
-									border: '1px solid #e5e7eb',
-									borderRadius: '4px',
-									fontSize: '0.9rem'
-								}}
 							>
 								<option value="all">All Sessions</option>
 								{userData.sessions.filter(s => s.type === 'session_summary').map(session => (
@@ -80,9 +76,9 @@ export default function DashboardPage() {
 							</select>
 						</div>
 
-						<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1rem' }}>
-							<div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem' }}>
-								<h3 style={{ margin: '0 0 1rem 0', color: '#374151' }}>Your Profile</h3>
+						<div className="dashboard__stats-grid">
+							<div className="dashboard__stat-card">
+								<h3 className="dashboard__stat-title">Your Profile</h3>
 								{user.profile && (
 									<div>
 										<p><strong>Profile Type:</strong> {user.profile.profile_type}</p>
@@ -91,12 +87,12 @@ export default function DashboardPage() {
 									</div>
 								)}
 								{!user.profile && (
-									<p style={{ color: '#6b7280' }}>No profile data available yet. Generate a profile to see insights.</p>
+									<p className="dashboard__no-data">No profile data available yet. Generate a profile to see insights.</p>
 								)}
 							</div>
 
-							<div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem' }}>
-								<h3 style={{ margin: '0 0 1rem 0', color: '#374151' }}>Activity Overview</h3>
+							<div className="dashboard__stat-card">
+								<h3 className="dashboard__stat-title">Activity Overview</h3>
 								{userData.features && (
 									<div>
 										<p><strong>Total Clicks (Buy):</strong> {userData.features.number_of_clicks_buy}</p>
@@ -109,28 +105,28 @@ export default function DashboardPage() {
 							</div>
 
 							{userData.features && (
-								<div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem' }}>
-									<h3 style={{ margin: '0 0 1rem 0', color: '#374151' }}>Click Activity</h3>
-									<div style={{ display: 'flex', gap: '1rem', alignItems: 'end', height: '200px' }}>
-										<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-											<div style={{ 
-												backgroundColor: '#8884d8', 
-												width: '80px', 
-												height: `${Math.max(20, (userData.features.number_of_clicks_buy / Math.max(userData.features.number_of_clicks_buy, userData.features.number_of_clicks_sell, 1)) * 160)}px`,
-												borderRadius: '4px',
-												marginBottom: '0.5rem'
-											}}></div>
-											<div style={{ fontSize: '0.9rem' }}>Buy ({userData.features.number_of_clicks_buy})</div>
+								<div className="dashboard__chart-container">
+									<h3 className="dashboard__chart-title">Click Activity</h3>
+									<div className="dashboard__chart">
+										<div className="dashboard__chart-item">
+											<div 
+												className={`dashboard__chart-bar dashboard__chart-bar--buy`}
+												style={{ 
+													width: '80px', 
+													height: `${Math.max(20, (userData.features.number_of_clicks_buy / Math.max(userData.features.number_of_clicks_buy, userData.features.number_of_clicks_sell, 1)) * 160)}px`
+												}}
+											></div>
+											<div className="dashboard__chart-label">Buy ({userData.features.number_of_clicks_buy})</div>
 										</div>
-										<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-											<div style={{ 
-												backgroundColor: '#82ca9d', 
-												width: '80px', 
-												height: `${Math.max(20, (userData.features.number_of_clicks_sell / Math.max(userData.features.number_of_clicks_buy, userData.features.number_of_clicks_sell, 1)) * 160)}px`,
-												borderRadius: '4px',
-												marginBottom: '0.5rem'
-											}}></div>
-											<div style={{ fontSize: '0.9rem' }}>Sell ({userData.features.number_of_clicks_sell})</div>
+										<div className="dashboard__chart-item">
+											<div 
+												className={`dashboard__chart-bar dashboard__chart-bar--sell`}
+												style={{ 
+													width: '80px', 
+													height: `${Math.max(20, (userData.features.number_of_clicks_sell / Math.max(userData.features.number_of_clicks_buy, userData.features.number_of_clicks_sell, 1)) * 160)}px`
+												}}
+											></div>
+											<div className="dashboard__chart-label">Sell ({userData.features.number_of_clicks_sell})</div>
 										</div>
 									</div>
 								</div>

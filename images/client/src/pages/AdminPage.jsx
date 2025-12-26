@@ -9,6 +9,7 @@ import Button from '../components/Button';
 
 import "../styles/Details.css";
 import "../styles/Chart.css";
+import "../styles/Admin.css";
 
 export default function AdminPage() {
 	const { axiosInstance } = useAuth();

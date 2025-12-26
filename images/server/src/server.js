@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { MongoClient, ObjectId } from "mongodb";
 import { hashPassword, comparePassword, generateToken, verifyToken } from "./auth.js";
 import jwt from "jsonwebtoken";
@@ -14,11 +15,19 @@ if (!JWT_SECRET) {
 }
 
 const app = express();
+
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // limit each IP to 100 requests per windowMs
+	message: { error: "Too many requests, please try again later." }
+});
+
 app.use(helmet());
 app.use(cors({
 	origin: process.env.FRONTEND_URL || 'http://localhost:8080',
 	credentials: true
 }));
+app.use(limiter);
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -574,8 +583,7 @@ function authenticateAdmin(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  console.log('Auth header:', authHeader);
-  console.log('Token:', token ? 'present' : 'missing');
+
 
   if (!token) {
     return res.status(401).json({ error: "Access token required" });

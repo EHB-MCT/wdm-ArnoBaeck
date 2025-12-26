@@ -1,0 +1,170 @@
+/* Dashboard Page Styles */
+.dashboard__session-filter {
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard__session-filter label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.dashboard__session-filter select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.dashboard__stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard__stat-card {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.dashboard__stat-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard__stat-value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #111827;
+}
+
+.dashboard__chart-container {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  height: 400px;
+}
+
+.dashboard__chart-title {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.dashboard__session-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard__session-header {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard__session-details {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.dashboard__session-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  grid-column: 1 / -1;
+}
+
+.dashboard__session-section h3 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+}
+
+.dashboard__session-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.dashboard__device-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dashboard__device-item {
+  background-color: #f3f4f6;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.dashboard__device-name {
+  font-weight: 600;
+}
+
+.dashboard__device-count {
+  color: #6b7280;
+}
+
+.dashboard__data-count {
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.dashboard__no-data {
+  color: #6b7280;
+}
+
+.dashboard__chart-container {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard__chart {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  height: 200px;
+}
+
+.dashboard__chart-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.dashboard__chart-bar {
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard__chart-bar--buy {
+  background-color: #8884d8;
+}
+
+.dashboard__chart-bar--sell {
+  background-color: #82ca9d;
+}
+
+.dashboard__chart-label {
+  font-size: 0.9rem;
+}
