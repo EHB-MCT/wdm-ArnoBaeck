@@ -28,7 +28,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - PORT=3000
-      - JWT_SECRET=your_super_secret_key_here
+      - JWT_SECRET=${JWT_SECRET:-change_this_in_production}
     command: npm run run
     depends_on:
       - ollama
