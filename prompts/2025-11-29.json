@@ -1,0 +1,60 @@
+{
+  "2025-11-29": {
+    "Authentication System Implementation": {
+      "prompts": [
+        {
+          "prompt": "Could you provide me with a solid basis for a fully working login system with additional frontend?",
+          "response": "I'll create a fully working login system with frontend for you. Let me start by examining the current codebase structure and then implement the authentication system.",
+          "timestamp": "2025-11-29T15:53:00.000Z"
+        },
+        {
+          "prompt": "3:58:08 PM [vite] Internal server error: Failed to resolve import \"react-router-dom\" from \"src/App.jsx\". Does the file exist?",
+          "response": "The dependencies weren't properly installed. Let me fix this by installing the missing packages.",
+          "timestamp": "2025-11-29T15:58:00.000Z"
+        },
+        {
+          "prompt": "When i try to login i instantly get redirected to the login screen. I already registered an accound under the following credentials: email: arno.baeck@student.ehb.be password: ***********.",
+          "response": "Let me check the authentication flow and debug the login issue. First, let me check the server logs and then test the authentication endpoints.",
+          "timestamp": "2025-11-29T15:59:00.000Z"
+        },
+        {
+          "prompt": "Now make login look the same as detail page, make it one style.",
+          "response": "I'll update login/register pages to match dark theme style of DetailPage. Let me modify Auth.css to match Details.css styling.",
+          "timestamp": "2025-11-29T16:03:00.000Z"
+        },
+        {
+          "prompt": "May i ask you why you didnt first look at AGENTS.md file? (you dont need to do all the things put in there). But in another conversation you told me that you ALWAYS look at AGENTS.md file to better understand the project before you start prompting?",
+          "response": "You're absolutely right to call me out on that. I should have read AGENTS.md file first before starting authentication system implementation. Let me read it now.",
+          "timestamp": "2025-11-29T16:04:00.000Z"
+        },
+        {
+          "prompt": "Leave the data logging for the moment being, is the rest that you did in line with the AGENTS.md file?",
+          "response": "Let me review what I implemented against the AGENTS.md guidelines.",
+          "timestamp": "2025-11-29T16:05:00.000Z"
+        },
+        {
+          "prompt": "Okay could you now do the logging roughly? Only implement important prompts, not every prompt please.",
+          "response": "I'll implement the data logging system for important prompts. Let me create a logging utility and integrate it into the authentication system.",
+          "timestamp": "2025-11-29T16:06:00.000Z"
+        },
+        {
+          "prompt": "Hold on buddy i didnt ask you to write code, i asked you to log this conversation roughly.",
+          "response": "You're absolutely right - I overcomplicated this. Let me read AGENTS.md again and implement simple file-based logging in a prompts folder.",
+          "timestamp": "2025-11-29T16:07:00.000Z"
+        },
+        {
+          "prompt": "Could you please rewind and only put logs in folder prompts? Take a look at AGENTS.md file and you'll understand what to do. Log it roughly, not everything needs to be logged.",
+          "response": "You're absolutely right - I overcomplicated this. Let me read AGENTS.md again and implement simple file-based logging in a prompts folder.",
+          "timestamp": "2025-11-29T16:08:00.000Z"
+        },
+        {
+          "prompt": "Okay i removed everything, please just log this conversation in prompts like described in AGENTS.md",
+          "response": "Creating simple file-based logging in /prompts folder following the structure: prompts => [DATE] => [TITLE OF SESSION] => [ALL PROMPTS AND ANSWERS]",
+          "timestamp": "2025-11-29T16:09:00.000Z"
+        }
+      ],
+      "startTime": "2025-11-29T15:53:00.000Z",
+      "endTime": "2025-11-29T16:09:00.000Z"
+    }
+  }
+}
