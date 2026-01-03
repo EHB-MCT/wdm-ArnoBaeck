@@ -141,7 +141,7 @@ ollama serve
 │       │   ├── auth.js         # Authentication middleware
 │       │   └── server.js       # Main server file
 │       └── package.json
-├── docs/                      # Documentation files
+├── docs/                       # Documentation files
 ├── prompts/                    # Conversation logging
 ├── docker-compose.yml          # Docker services configuration
 ├── AGENTS.md                   # Development commands
