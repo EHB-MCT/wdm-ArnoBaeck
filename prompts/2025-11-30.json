@@ -1,0 +1,30 @@
+{
+  "2025-11-30": {
+    "Price Chart Implementation": {
+      "prompts": [
+        {
+          "prompt": "I want the random price to be generated based on the previos price. That i dont have jumps of lets say for example 5000 dollar. Based on the priviouse price i want to generate a new price that is x% off from the previouse price.",
+          "response": "Modified price generation to use previous price as base with maximum 5% change per update to prevent unrealistic jumps.",
+          "timestamp": "2025-11-30T10:22:00.000Z"
+        },
+        {
+          "prompt": "Now on startup i want the code to create 20 price points. That way i can implement it in to the graphs.",
+          "response": "Added initial price generation on server startup creating 20 historical price points spaced 30 seconds apart for immediate graph visualization.",
+          "timestamp": "2025-11-30T10:24:00.000Z"
+        },
+        {
+          "prompt": "Could you now make the graph look nice?",
+          "response": "Enhanced chart with professional styling including gradients, animations, tooltips, and responsive design using Recharts library.",
+          "timestamp": "2025-11-30T10:38:00.000Z"
+        },
+        {
+          "prompt": "Could you now do prompt logging same as in this file? \"2025-11-29.json\"",
+          "response": "Manually created prompts file following existing format with important prompts from price chart implementation session.",
+          "timestamp": "2025-11-30T10:47:00.000Z"
+        }
+      ],
+      "startTime": "2025-11-30T10:22:00.000Z",
+      "endTime": "2025-11-30T10:47:00.000Z"
+    }
+  }
+}

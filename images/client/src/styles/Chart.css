@@ -1,0 +1,42 @@
+.chart-container {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h2 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.line-chart {
+  width: 100%;
+  height: 300px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-point {
+  cursor: pointer;
+  transition: r 0.2s ease;
+}
+
+.chart-point:hover {
+  r: 6;
+}
+
+.chart-point-label {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chart-point:hover + .chart-point-label {
+  opacity: 1;
+}
